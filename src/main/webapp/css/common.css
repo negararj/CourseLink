@@ -1,0 +1,132 @@
+/* CourseLink — shared styles for app pages */
+:root {
+    --cl-primary: #1a365d;
+    --cl-primary-light: #2c5282;
+    --cl-accent: #ed8936;
+    --cl-accent-hover: #dd6b20;
+    --cl-bg: #f7fafc;
+    --cl-card: #fff;
+    --cl-text: #2d3748;
+    --cl-muted: #718096;
+    --cl-border: #e2e8f0;
+    --sidebar-width: 240px;
+}
+* { box-sizing: border-box; }
+body {
+    font-family: 'Outfit', sans-serif;
+    color: var(--cl-text);
+    background: var(--cl-bg);
+    margin: 0;
+}
+.btn-primary {
+    background: var(--cl-primary);
+    border-color: var(--cl-primary);
+    font-weight: 600;
+}
+.btn-primary:hover {
+    background: var(--cl-primary-light);
+    border-color: var(--cl-primary-light);
+}
+.btn-accent {
+    background: var(--cl-accent);
+    border: none;
+    color: #fff;
+    font-weight: 600;
+}
+.btn-accent:hover {
+    background: var(--cl-accent-hover);
+    color: #fff;
+}
+
+/* App layout: top navbar + main content */
+.app-navbar {
+    background: var(--cl-card) !important;
+    box-shadow: 0 1px 0 var(--cl-border);
+}
+.app-navbar .navbar-brand { font-weight: 700; color: var(--cl-primary) !important; }
+.app-navbar .nav-link {
+    font-weight: 500;
+    color: var(--cl-text) !important;
+}
+.app-navbar .nav-link:hover { color: var(--cl-primary) !important; }
+
+.app-layout {
+    display: flex;
+    min-height: 100vh;
+}
+.app-sidebar {
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
+    background: var(--cl-card);
+    border-right: 1px solid var(--cl-border);
+    padding: 1.25rem 0;
+}
+.app-sidebar .nav-link {
+    color: var(--cl-text);
+    padding: 0.5rem 1.25rem;
+    border-radius: 0 8px 8px 0;
+}
+.app-sidebar .nav-link:hover { background: var(--cl-bg); color: var(--cl-primary); }
+.app-sidebar .nav-link.active { background: #ebf8ff; color: var(--cl-primary); font-weight: 600; }
+.app-main {
+    flex: 1;
+    padding: 1.5rem 2rem;
+}
+
+.card-cl {
+    background: var(--cl-card);
+    border: 1px solid var(--cl-border);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.page-title { font-weight: 700; color: var(--cl-primary); margin-bottom: 1.5rem; }
+.text-muted-cl { color: var(--cl-muted); }
+
+@media (max-width: 991.98px) {
+    .app-layout { flex-direction: column; }
+    .app-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--cl-border);
+        padding: 0.5rem;
+    }
+    .app-sidebar .nav { flex-direction: row; flex-wrap: wrap; gap: 0.25rem; }
+    .app-sidebar .nav-link { border-radius: 8px; }
+}
+
+/* Shared Background for Auth Pages */
+.auth-page { 
+    min-height: calc(100vh - 72px); 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    padding: 2rem;
+    /* This matches the dark blue professional theme from your Home.html */
+    background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%);
+}
+
+/* Global Navbar Styling (Matches Home.html) */
+.navbar {
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    background-color: #ffffff !important;
+}
+
+.navbar-brand {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    color: var(--cl-primary);
+}
+
+/* Auth Card Styling (Shared by Login and Signup) */
+.auth-card { 
+    max-width: 440px; 
+    width: 100%; 
+    z-index: 2;
+}
+
+.auth-card .card { 
+    border-radius: 20px; 
+    border: none; 
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2); 
+    padding: 2rem;
+}

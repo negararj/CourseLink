@@ -1,0 +1,60 @@
+/* Filters */
+.filter-btn {
+    border: 1px solid var(--cl-border);
+    background: white;
+    padding: 8px 24px;
+    border-radius: 50px;
+    margin-right: 10px;
+    font-weight: 500;
+    transition: 0.3s;
+}
+.filter-btn.active {
+    background: var(--cl-primary);
+    color: white;
+    border-color: var(--cl-primary);
+}
+
+/* Course Cards */
+.course-card-ui {
+    background: white;
+    border: 1px solid var(--cl-border);
+    border-radius: 15px;
+    padding: 25px;
+    height: 100%;
+    transition: 0.3s;
+    cursor: pointer;
+}
+.course-card-ui:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    border-color: var(--cl-accent);
+}
+
+/* Category Detail Cards */
+.category-card {
+    background: white;
+    border: 1px solid var(--cl-border);
+    border-radius: 12px;
+    padding: 30px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.category-card:hover {
+    background: #f8fbff;
+    border-color: var(--cl-primary);
+}
+.cat-icon {
+    font-size: 2rem;
+    margin-bottom: 15px;
+    width: 60px;
+    height: 60px;
+    line-height: 60px;
+    background: #f0f4f8;
+    border-radius: 50%;
+    display: inline-block;
+}
+.ai-quiz {
+    background: linear-gradient(145deg, #ffffff, #eef6ff);
+    border: 2px solid var(--cl-primary);
+}

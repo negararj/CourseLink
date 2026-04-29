@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Instructor Calendar — CourseLink</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="Images/web-icon.png" type="image/png">
+
+    <!-- Fonts + Bootstrap -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- FullCalendar -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js"></script>
+
+    <!-- Your CSS -->
+    <link href="css/home.css" rel="stylesheet">
+    <link href="css/dashboard.css" rel="stylesheet">
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg app-navbar sticky-top bg-white">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center" href="Home.html">
+                <img src="Images/web-logo.png" alt="CourseLink" width="38" height="34" class="me-2">
+                <span class="fw-bold">CourseLink</span>
+            </a>
+            <div class="ms-auto d-flex align-items-center">
+                <span class="me-3 text-muted d-none d-md-block">Welcome, Dr. Smith</span>
+                <a href="Profile.html" class="user-avatar text-decoration-none">DS</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="app-container">
+        <aside class="app-sidebar">
+            <nav class="nav flex-column">
+                <a class="nav-link" href="Home.html">Home</a>
+                <a class="nav-link" href="InstructorDashboard.html">Dashboard</a>
+                <a class="nav-link" href="InstructorCourses.html">Manage Courses</a>
+                <a class="nav-link" href="InstructorSyllabus.html">Edit Syllabus</a>
+                <a class="nav-link" href="InstructorMaterials.html">Upload Materials</a>
+                <a class="nav-link active" href="InstructorCalendar.html">Exam Calendar</a>
+            </nav>
+        </aside>
+
+        <main class="app-main">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Instructor Exam Calendar</h2>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addEventModal">+ Add Exam/Quiz</button>
+                    <button class="btn btn-outline-primary" onclick="calendar.changeView('dayGridMonth')">Monthly</button>
+                    <button class="btn btn-outline-primary" onclick="calendar.changeView('timeGridWeek')">Weekly</button>
+                </div>
+            </div>
+
+            <div class="feature-card p-4 shadow-sm">
+                <div id="calendar"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for adding event -->
+    <div class="modal fade" id="addEventModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-bold">Schedule New Assessment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addEventForm">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Course</label>
+                            <select class="form-select" id="eventCourse">
+                                <option>Intro to Programming</option>
+                                <option>Calculus II</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Exam/Quiz Name</label>
+                            <input type="text" class="form-control" id="eventTitle" placeholder="e.g. Midterm 1" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold">Date</label>
+                                <input type="date" class="form-control" id="eventDate" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold">Weight (%)</label>
+                                <input type="number" class="form-control" id="eventWeight" placeholder="e.g. 15" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Topic Covered</label>
+                            <input type="text" class="form-control" id="eventTopic" placeholder="e.g. Differentiation" required>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="publishToStudents" checked>
+                            <label class="form-check-label small" for="publishToStudents">Publish to student calendars</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 mt-2 py-2">Add to Calendar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let calendar;
+        document.addEventListener("DOMContentLoaded", function () {
+            const calendarEl = document.getElementById("calendar");
+            
+            // Load existing events from localStorage or use defaults
+            let instructorEvents = JSON.parse(localStorage.getItem('courseLinkEvents')) || [
+                { title: "Intro to Programming: Midterm Exam 1 (25%)", start: "2026-03-25", color: "#1a365d" },
+                { title: "Calculus II: Quiz 3 (15%)", start: "2026-03-30", color: "#ed8936" },
+                { title: "Intro to Programming: Project Due (15%)", start: "2026-04-20", color: "#1a365d" }
+            ];
+
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: "dayGridMonth",
+                headerToolbar: {
+                    left: "prev,next today",
+                    center: "title",
+                    right: ""
+                },
+                events: instructorEvents,
+                height: "auto"
+            });
+
+            calendar.render();
+
+            document.getElementById('addEventForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const title = document.getElementById('eventTitle').value;
+                const date = document.getElementById('eventDate').value;
+                const course = document.getElementById('eventCourse').value;
+                const weight = document.getElementById('eventWeight').value;
+                const topic = document.getElementById('eventTopic').value;
+                const isPublished = document.getElementById('publishToStudents').checked;
+
+                const newEvent = {
+                    title: `${course}: ${title} (${weight}%)`,
+                    start: date,
+                    color: course === 'Calculus II' ? '#ed8936' : '#1a365d',
+                    extendedProps: {
+                        topic: topic,
+                        published: isPublished
+                    }
+                };
+
+                // Add to calendar UI
+                calendar.addEvent(newEvent);
+
+                // Save to localStorage
+                instructorEvents.push(newEvent);
+                localStorage.setItem('courseLinkEvents', JSON.stringify(instructorEvents));
+
+                alert(`${title} added to calendar!\nTopic: ${topic}\nWeight: ${weight}%\nPublished: ${isPublished ? 'Yes' : 'No'}`);
+                bootstrap.Modal.getInstance(document.getElementById('addEventModal')).hide();
+                this.reset();
+            });
+        });
+    </script>
+</body>
+</html>

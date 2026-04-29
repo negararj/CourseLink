@@ -1,0 +1,167 @@
+/* Layout Alignment */
+.app-navbar {
+    height: 70px;
+    border-bottom: 1px solid #edf2f7;
+    z-index: 1050;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+.app-container {
+    display: flex;
+    min-height: calc(100vh - 70px);
+}
+
+/* Sidebar Styling */
+.app-sidebar {
+    width: 250px;
+    background-color: #f8fafc;
+    border-right: 1px solid #edf2f7;
+    padding: 1.5rem 1rem;
+    flex-shrink: 0;
+}
+
+.app-sidebar .nav-link {
+    padding: 0.8rem 1.2rem;
+    color: #4a5568;
+    font-weight: 500;
+    border-radius: 10px;
+    margin-bottom: 0.4rem;
+    transition: all 0.2s ease;
+}
+
+.app-sidebar .nav-link.active {
+    background-color: var(--cl-primary);
+    color: white !important;
+}
+
+/* Main Content Area */
+.app-main {
+    flex-grow: 1;
+    padding: 2.5rem;
+    background-color: #ffffff;
+}
+
+/* Stats Card Utilities */
+.border-end {
+    border-right: 1px solid #edf2f7 !important;
+}
+
+.progress {
+    background-color: #f1f5f9;
+    border-radius: 20px;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    background: #1a365d;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+/* Course Card Design */
+.course-entry {
+    background: white;
+    border: 1px solid #edf2f7;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    transition: 0.2s;
+}
+
+.course-entry:hover {
+    border-color: var(--cl-primary);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+/* Alert Boxes */
+.alert-box {
+    background: white;
+    border: 1px solid #edf2f7;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid var(--cl-accent);
+}
+
+.w-fit {
+    width: fit-content;
+}
+
+/* Styling for the Grade Badge in My Courses */
+.grade-badge {
+    background: #ebf4ff;
+    color: var(--cl-primary);
+    font-weight: 700;
+    padding: 8px 15px;
+    border-radius: 10px;
+    font-size: 1.1rem;
+}
+
+.course-meta {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.course-meta span {
+    font-size: 0.85rem;
+    color: #718096;
+}
+
+.course-actions {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #edf2f7;
+    display: flex;
+    gap: 10px;
+}
+
+.post {
+    border-left: 3px solid #dee2e6;
+    padding-left: 10px;
+    margin-bottom: 15px;
+}
+
+.vote {
+    cursor: pointer;
+    font-size: 14px;
+    user-select: none;
+}
+
+.reply-box {
+    margin-top: 10px;
+}
+
+.reply {
+    margin-left: 25px;
+    border-left: 2px solid #e9ecef;
+    padding-left: 10px;
+    margin-top: 10px;
+}
+
+#calendar {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+}
+
+.user-avatar {
+    background: #0d6efd;
+    color: white;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    cursor: pointer;
+}

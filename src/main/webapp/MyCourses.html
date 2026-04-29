@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My Courses — CourseLink</title>
+    <link rel="icon" href="Images/web-icon.png" type="image/png">
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="css/home.css" rel="stylesheet">
+    <link href="css/dashboard.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg app-navbar sticky-top bg-white">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center" href="Home.html">
+                <img src="Images/web-logo.png" alt="CourseLink" width="38" height="34" class="me-2">
+                <span class="fw-bold">CourseLink</span>
+            </a>
+            <div class="ms-auto d-flex align-items-center">
+                <a href="Profile.html" class="user-avatar text-decoration-none">JD</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="app-container">
+        <aside class="app-sidebar">
+            <nav class="nav flex-column">
+                <a class="nav-link" href="Home.html">Home</a>
+                <a class="nav-link" href="StudentDashboard.html">Dashboard</a>
+                <a class="nav-link active" href="MyCourses.html" id="nav-my-courses">My Courses</a>
+                <a class="nav-link" href="Materials.html">Materials</a>
+                <a class="nav-link" href="Evaluate.html">Grade Tracker</a>
+                <a class="nav-link" href="Calendar.html">Calendar</a>
+            </nav>
+        </aside>
+
+        <main class="app-main">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="page-title mb-1">My Registered Courses</h2>
+                    <p class="text-muted-cl">Manage your current semester enrollments and performance.</p>
+                </div>
+                <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal"
+                    data-bs-target="#addCourseModal">
+                    + Register New Course
+                </button>
+            </div>
+
+            <div class="row g-4" id="registered-courses-grid">
+            </div>
+        </main>
+    </div>
+
+    <div class="modal fade" id="addCourseModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-bold">Add New Course</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addCourseForm">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Course Name</label>
+                            <input type="text" class="form-control" id="courseName"
+                                placeholder="e.g. Intro to Psychology" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label class="form-label small fw-bold">Instructor</label>
+                                <input type="text" class="form-control" id="instructorName"
+                                    placeholder="e.g. Dr. Jane Doe" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label small fw-bold">Credits</label>
+                                <input type="number" class="form-control" id="courseCredits" placeholder="3" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Current Grade / Average (%)</label>
+                            <input type="number" class="form-control" id="initialGrade" placeholder="90">
+                        </div>
+                        <button type="submit" class="btn btn-accent w-100 mt-2 py-2">Add to My Semester</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/mycourses.js"></script>
+</body>
+
+</html>

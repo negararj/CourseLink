@@ -1,0 +1,211 @@
+/* CourseLink — Home / Landing page */
+
+:root {
+    --cl-primary: #1a365d;
+    --cl-primary-light: #2c5282;
+    --cl-accent: #ed8936;
+    --cl-accent-hover: #dd6b20;
+    --cl-bg: #f7fafc;
+    --cl-text: #2d3748;
+    --cl-muted: #718096;
+}
+
+body {
+    font-family: 'Outfit', sans-serif;
+    color: var(--cl-text);
+    background: var(--cl-bg);
+    overflow-x: hidden;
+}
+
+.navbar {
+    background: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+}
+
+.navbar-brand img {
+    border-radius: 8px;
+}
+
+.nav-link {
+    font-weight: 500;
+    color: var(--cl-text) !important;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: var(--cl-primary) !important;
+}
+
+.btn-primary {
+    background: var(--cl-primary);
+    border-color: var(--cl-primary);
+    font-weight: 600;
+}
+
+.btn-primary:hover {
+    background: var(--cl-primary-light);
+    border-color: var(--cl-primary-light);
+}
+
+.btn-accent {
+    background: var(--cl-accent);
+    border: none;
+    color: #fff;
+    font-weight: 600;
+}
+
+.btn-accent:hover {
+    background: var(--cl-accent-hover);
+    color: #fff;
+}
+
+/* Hero */
+.hero {
+    min-height: 85vh;
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, var(--cl-primary) 0%, #2d3748 100%);
+    color: #fff;
+    position: relative;
+}
+
+.hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 120px;
+    background: linear-gradient(to top, var(--cl-bg), transparent);
+}
+
+.hero h1 {
+    font-weight: 700;
+    font-size: clamp(2rem, 5vw, 3.25rem);
+    line-height: 1.2;
+    margin-bottom: 1rem;
+}
+
+.hero .lead {
+    font-size: 1.15rem;
+    opacity: 0.95;
+    max-width: 520px;
+    margin-bottom: 2rem;
+}
+
+.hero .btn-accent {
+    padding: 0.75rem 1.75rem;
+    font-size: 1rem;
+}
+
+/* Features */
+.section-title {
+    font-weight: 700;
+    color: var(--cl-primary);
+    margin-bottom: 3rem;
+}
+
+.feature-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 1.75rem;
+    height: 100%;
+    border: 1px solid #e2e8f0;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.feature-card:hover {
+    box-shadow: 0 12px 40px rgba(26, 54, 93, 0.12);
+    transform: translateY(-2px);
+}
+
+.feature-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.feature-icon.one {
+    background: #ebf8ff;
+    color: var(--cl-primary);
+}
+
+.feature-icon.two {
+    background: #fef5e7;
+    color: #b7791f;
+}
+
+.feature-icon.three {
+    background: #e6fffa;
+    color: #0d9488;
+}
+
+.feature-icon.four {
+    background: #fce7f3;
+    color: #be185d;
+}
+
+.feature-card h3 {
+    font-weight: 600;
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.feature-card p {
+    color: var(--cl-muted);
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.feature-card-link {
+    text-decoration: none !important;
+    color: inherit !important;
+    display: block; /* Makes the anchor take up the full width/height of the column */
+    height: 100%;
+}
+
+.feature-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+/* CTA strip */
+.cta-strip {
+    background: var(--cl-primary);
+    color: #fff;
+    padding: 3rem 0;
+}
+
+.cta-strip h2 {
+    font-weight: 700;
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.cta-strip p {
+    opacity: 0.9;
+    margin-bottom: 1.5rem;
+}
+
+/* Footer */
+footer {
+    background: #fff;
+    border-top: 1px solid #e2e8f0;
+    padding: 2rem 0;
+    color: var(--cl-muted);
+    font-size: 0.9rem;
+}
+
+footer a {
+    color: var(--cl-primary);
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
