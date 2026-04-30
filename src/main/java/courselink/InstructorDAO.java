@@ -5,6 +5,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -114,5 +115,58 @@ public class InstructorDAO {
         }
 
         return assessments;
+    }
+
+    public boolean addMaterial(Material material) {
+        String query = "INSERT INTO Materials (course_id, title, category, file_path, upload_date) VALUES (?, ?, ?, ?, ?)";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+
+            ps.setString(1, material.getCourseId());
+            ps.setString(2, material.getTitle());
+            ps.setString(3, material.getCategory());
+            ps.setString(4, material.getFilePath());
+            ps.setTimestamp(5, Timestamp.valueOf(material.getUploadDate()));
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public List<Material> getMaterialsByCourse(String courseId) {
+        List<Material> materials = new ArrayList<>();
+        String query = "SELECT * FROM Materials WHERE course_id = ? ORDER BY upload_date DESC";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+
+            ps.setString(1, courseId);
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Material material = new Material();
+                material.setId(rs.getLong("material_id"));
+                material.setCourseId(rs.getString("course_id"));
+                material.setTitle(rs.getString("title"));
+                material.setCategory(rs.getString("category"));
+                material.setFilePath(rs.getString("file_path"));
+
+                Timestamp uploadDate = rs.getTimestamp("upload_date");
+                if (uploadDate != null) {
+                    material.setUploadDate(uploadDate.toLocalDateTime());
+                }
+
+                materials.add(material);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return materials;
     }
 }

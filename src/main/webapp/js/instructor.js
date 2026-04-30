@@ -83,70 +83,112 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
+	// ==========================================
+    // 3. REAL MATERIALS UPLOAD TO JAVA BACKEND
     // ==========================================
-    // 3. MATERIALS UPLOAD & MANAGEMENT LOGIC
-    // ==========================================
-    const materialsGrid = document.getElementById('materials-grid');
     const uploadForm = document.getElementById('instructorUploadForm');
+    const courseSelect = document.getElementById('courseSelect');
+    const courseIdInput = uploadForm ? uploadForm.querySelector('input[name="courseId"]') : null;
 
-    if (materialsGrid) {
-        // Mock data for the materials list
-        let materials = [
-            { id: 1, title: 'Week 1: Syntax Basics', type: 'Lecture Notes', date: 'Oct 12, 2023' },
-            { id: 2, title: '2022 Midterm Exam', type: 'Past Paper', date: 'Oct 15, 2023' }
-        ];
+    function selectedCourseId() {
+        return courseSelect ? courseSelect.value : 'CMP120';
+    }
 
-        function renderMaterials() {
-            materialsGrid.innerHTML = '';
-            materials.forEach((item, index) => {
-                materialsGrid.innerHTML += `
-                    <div class="col-md-6 col-xl-4">
-                        <div class="card h-100 p-3 border-0 shadow-sm">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <span class="badge bg-light text-primary">${item.type}</span>
-                                <button class="btn btn-sm text-danger border-0 p-0 delete-material" data-index="${index}">Delete</button>
-                            </div>
-                            <h6 class="fw-bold mb-1">${item.title}</h6>
-                            <p class="text-muted small mb-0">Uploaded: ${item.date}</p>
+    function syncSelectedCourse() {
+        if (courseIdInput) {
+            courseIdInput.value = selectedCourseId();
+        }
+    }
+
+    function loadInstructorMaterials() {
+        const grid = document.getElementById('materials-grid');
+        if (!grid) {
+            return;
+        }
+
+        grid.innerHTML = '<p class="text-muted">Loading materials...</p>';
+
+        fetch(`api/upload-material?courseId=${encodeURIComponent(selectedCourseId())}`)
+            .then(response => response.json())
+            .then(materials => {
+                grid.innerHTML = '';
+
+                if (!materials.length) {
+                    grid.innerHTML = '<p class="text-muted">No materials uploaded for this course yet.</p>';
+                    return;
+                }
+
+                materials.forEach(material => {
+                    const card = document.createElement('div');
+                    card.className = 'col-md-6 col-xl-4';
+                    card.innerHTML = `
+                        <div class="card h-100 border-0 shadow-sm p-3">
+                            <span class="badge bg-light text-dark align-self-start mb-3">${material.category}</span>
+                            <h5 class="fw-bold">${material.title}</h5>
+                            <p class="small text-muted mb-3">${material.uploadDate ? new Date(material.uploadDate).toLocaleDateString() : ''}</p>
+                            <a class="btn btn-sm btn-outline-primary mt-auto" href="${material.filePath}" target="_blank">Open file</a>
                         </div>
-                    </div>`;
+                    `;
+                    grid.appendChild(card);
+                });
+            })
+            .catch(error => {
+                console.error('Materials Load Error:', error);
+                grid.innerHTML = '<p class="text-danger">Could not load materials.</p>';
             });
+    }
 
-            // Attach actual delete functionality to the rendered buttons
-            document.querySelectorAll('.delete-material').forEach(btn => {
-                btn.onclick = function() {
-                    const idx = this.getAttribute('data-index');
-                    materials.splice(idx, 1);
-                    renderMaterials();
-                };
+    if (courseSelect) {
+        syncSelectedCourse();
+        loadInstructorMaterials();
+        courseSelect.addEventListener('change', () => {
+            syncSelectedCourse();
+            loadInstructorMaterials();
+        });
+    }
+
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', (e) => {
+            e.preventDefault(); // Stops the page from refreshing
+            syncSelectedCourse();
+            
+            // Automatically bundles your text and file for Java
+            const formData = new FormData(uploadForm);
+
+            // Send the request to your backend
+            fetch('api/upload-material', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Material uploaded successfully to the database!");
+                    
+                    // Safely close the Bootstrap Modal
+                    const modalEl = document.getElementById('uploadMaterialModal');
+                    if (modalEl) {
+                        const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                        modalInstance.hide();
+                    }
+                    
+                    // BULLETPROOF RESET: Forces the form to clear even if there is an ID conflict
+                    try {
+                        HTMLFormElement.prototype.reset.call(e.target);
+                        syncSelectedCourse();
+                        loadInstructorMaterials();
+                    } catch (err) {
+                        console.warn("Could not reset form dynamically. Reloading to clear state.");
+                        window.location.reload(); 
+                    }
+                } else {
+                    alert("Failed to upload material. Check Java console.");
+                }
+            })
+            .catch(error => {
+                console.error('Fetch Error:', error);
+                alert("Could not connect to the server. Is Tomcat running?");
             });
-        }
-
-        // Handle File Upload Form Submission
-        if (uploadForm) {
-            uploadForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                
-                const newFile = {
-                    id: Date.now(),
-                    title: document.getElementById('materialTitle').value,
-                    type: document.getElementById('materialType').value,
-                    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                };
-
-                materials.unshift(newFile); // Add to the top of the list
-                renderMaterials();
-                
-                // Close the Bootstrap Modal
-                const modalEl = document.getElementById('uploadMaterialModal');
-                const modalInstance = bootstrap.Modal.getInstance(modalEl);
-                if (modalInstance) modalInstance.hide();
-                
-                uploadForm.reset();
-            });
-        }
-
-        // Initial render on page load
-        renderMaterials();
+        });
     }
 });

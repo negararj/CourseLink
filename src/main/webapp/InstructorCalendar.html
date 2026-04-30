@@ -73,8 +73,8 @@
                         <div class="mb-3">
                             <label class="form-label small fw-bold">Course</label>
                             <select class="form-select" id="eventCourse">
-                                <option>Intro to Programming</option>
-                                <option>Calculus II</option>
+                                <option value="CMP120">Intro to Programming</option>
+                                <option value="MTH104">Calculus II</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -135,10 +135,13 @@
                 e.preventDefault();
                 const title = document.getElementById('eventTitle').value;
                 const date = document.getElementById('eventDate').value;
-                const course = document.getElementById('eventCourse').value;
+                const courseSelect = document.getElementById('eventCourse');
+                const courseId = courseSelect.value;
+                const course = courseSelect.options[courseSelect.selectedIndex].text;
                 const weight = document.getElementById('eventWeight').value;
                 const topic = document.getElementById('eventTopic').value;
                 const isPublished = document.getElementById('publishToStudents').checked;
+                const type = title.toLowerCase().includes('quiz') ? 'Quiz' : 'Exam';
 
                 const newEvent = {
                     title: `${course}: ${title} (${weight}%)`,
@@ -157,9 +160,34 @@
                 instructorEvents.push(newEvent);
                 localStorage.setItem('courseLinkEvents', JSON.stringify(instructorEvents));
 
-                alert(`${title} added to calendar!\nTopic: ${topic}\nWeight: ${weight}%\nPublished: ${isPublished ? 'Yes' : 'No'}`);
-                bootstrap.Modal.getInstance(document.getElementById('addEventModal')).hide();
-                this.reset();
+                const params = new URLSearchParams();
+                params.append('courseId', courseId);
+                params.append('title', title);
+                params.append('type', type);
+                params.append('weight', weight);
+                params.append('date', date);
+                params.append('topic', topic);
+                params.append('published', isPublished);
+
+                fetch('api/add-exam', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params.toString()
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.success
+                        ? `${title} added and published successfully.`
+                        : `${title} was added to this calendar, but could not be saved to the database.`);
+                })
+                .catch(error => {
+                    console.error('Assessment Save Error:', error);
+                    alert(`${title} was added to this calendar, but the server could not be reached.`);
+                })
+                .finally(() => {
+                    bootstrap.Modal.getInstance(document.getElementById('addEventModal')).hide();
+                    this.reset();
+                });
             });
         });
     </script>
