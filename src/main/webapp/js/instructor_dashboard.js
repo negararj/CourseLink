@@ -1,107 +1,198 @@
-// Data for Instructor Dashboard
-const instructorData = {
-    totalStudents: 142,
-    avgPerformance: "84%",
-    activeCourses: 2,
-    totalUploads: 20,
-    courses: [
-        { title: "Intro to Programming", code: "CMP120", students: 85, uploads: 12, icon: "💻", color: "one" },
-        { title: "Calculus II", code: "MTH104", students: 57, uploads: 8, icon: "📐", color: "two" }
-    ],
-    recentUploads: [
-        { title: "Chapter 4: Data Structures", course: "CMP120", date: "2 hours ago", type: "PDF" },
-        { title: "Midterm Review Sheet", course: "MTH104", date: "Yesterday", type: "DOCX" },
-        { title: "Quiz 3 Sample Solutions", course: "CMP120", date: "2 days ago", type: "PDF" }
-    ],
-    upcomingExams: [
-        { title: "Midterm Exam 1", course: "CMP120", date: "Oct 28", time: "10:00 AM" },
-        { title: "Quiz 3", course: "MTH104", date: "Oct 30", time: "2:30 PM" },
-        { title: "Final Project Draft", course: "CMP120", date: "Nov 05", time: "11:59 PM" }
-    ]
-};
-
-// 1. Populate Courses Taught
-const coursesList = document.getElementById('courses-taught-list');
-instructorData.courses.forEach(course => {
-    coursesList.innerHTML += `
-        <div class="course-entry shadow-sm mb-3">
-            <div class="feature-icon ${course.color} me-4" style="width:55px; height:55px; font-size:1.4rem;">
-                ${course.icon}
-            </div>
-            <div class="flex-grow-1">
-                <h5 class="fw-bold mb-0">${course.title}</h5>
-                <p class="text-muted small mb-0">${course.code} • ${course.students} Students</p>
-            </div>
-            <div class="text-end me-4 d-none d-md-block">
-                <h6 class="fw-bold mb-0">${course.uploads}</h6>
-                <small class="text-muted">Uploads</small>
-            </div>
-            <div class="d-flex gap-2">
-                <a href="InstructorSyllabus.html?course=${encodeURIComponent(course.title)}" class="btn btn-outline-primary btn-sm rounded-pill px-3">Syllabus</a>
-                <a href="InstructorMaterials.html?course=${encodeURIComponent(course.title)}" class="btn btn-primary btn-sm rounded-pill px-3">Manage</a>
-            </div>
-        </div>
-    `;
+﻿document.addEventListener('DOMContentLoaded', () => {
+    loadInstructorDashboard();
+    setupUploadForm();
+    setupExamForm();
 });
 
-// 2. Populate Recent Uploads
-const uploadsList = document.getElementById('recent-uploads-list');
-instructorData.recentUploads.forEach(upload => {
-    uploadsList.innerHTML += `
-        <div class="course-entry shadow-sm mb-2" style="padding: 1rem 1.5rem;">
-            <div class="flex-grow-1">
-                <h6 class="fw-bold mb-0">${upload.title}</h6>
-                <p class="text-muted small mb-0">${upload.course} • ${upload.date}</p>
+function loadInstructorDashboard() {
+    fetch('api/instructor-dashboard')
+        .then(response => response.json())
+        .then(data => renderDashboard(data))
+        .catch(error => {
+            console.error('Dashboard Load Error:', error);
+            document.getElementById('courses-taught-list').innerHTML = '<p class="text-danger">Could not load dashboard data.</p>';
+        });
+}
+
+function renderDashboard(data) {
+    updateStats(data);
+    renderCourses(data.courses || []);
+    renderUploads(data.recentUploads || []);
+    renderExams(data.upcomingExams || []);
+}
+
+function updateStats(data) {
+    const statValues = document.querySelectorAll('.feature-card h2');
+    if (statValues.length >= 4) {
+        statValues[0].innerText = data.totalStudents || 0;
+        statValues[1].innerText = data.avgPerformance || '-';
+        statValues[2].innerText = data.activeCourses || 0;
+        statValues[3].innerText = data.totalUploads || 0;
+    }
+}
+
+function renderCourses(courses) {
+    const coursesList = document.getElementById('courses-taught-list');
+    coursesList.innerHTML = '';
+
+    if (!courses.length) {
+        coursesList.innerHTML = '<p class="text-muted">No courses available yet.</p>';
+        return;
+    }
+
+    courses.forEach((course, index) => {
+        const code = courseCode(course.name, index);
+        coursesList.innerHTML += `
+            <div class="course-entry shadow-sm mb-3">
+                <div class="feature-icon ${index % 2 === 0 ? 'one' : 'two'} me-4" style="width:55px; height:55px; font-size:1rem;">
+                    CL
+                </div>
+                <div class="flex-grow-1">
+                    <h5 class="fw-bold mb-0">${course.name}</h5>
+                    <p class="text-muted small mb-0">${code} | ${course.instructor}</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="InstructorSyllabus.html?course=${encodeURIComponent(course.name)}" class="btn btn-outline-primary btn-sm rounded-pill px-3">Syllabus</a>
+                    <a href="InstructorMaterials.html?course=${encodeURIComponent(code)}" class="btn btn-primary btn-sm rounded-pill px-3">Manage</a>
+                </div>
             </div>
-            <span class="badge bg-light text-dark border">${upload.type}</span>
-        </div>
-    `;
-});
+        `;
+    });
+}
 
-// 3. Populate Upcoming Exams
-const examsList = document.getElementById('upcoming-exams-list');
-instructorData.upcomingExams.forEach(exam => {
-    examsList.innerHTML += `
-        <div class="alert-box mb-3" style="border-left: 4px solid var(--cl-primary);">
-            <small class="text-primary fw-bold text-uppercase" style="font-size: 0.7rem;">${exam.date} • ${exam.time}</small>
-            <h6 class="fw-bold mb-1 mt-1">${exam.title}</h6>
-            <p class="small text-muted mb-0">${exam.course}</p>
-        </div>
-    `;
-});
+function renderUploads(uploads) {
+    const uploadsList = document.getElementById('recent-uploads-list');
+    uploadsList.innerHTML = '';
 
-// 4. Handle Modal Submissions (Mock)
-document.getElementById('uploadForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    alert('Material uploaded successfully!');
-    bootstrap.Modal.getInstance(document.getElementById('uploadMaterialModal')).hide();
-});
+    if (!uploads.length) {
+        uploadsList.innerHTML = '<p class="text-muted">No recent uploads yet.</p>';
+        return;
+    }
 
-document.getElementById('examForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const name = document.getElementById('examName').value;
-    const date = document.getElementById('examDate').value;
-    const course = document.getElementById('examCourse').value;
-    const weight = document.getElementById('examWeight').value;
-    const topic = document.getElementById('examTopic').value;
-    const isPublished = document.getElementById('publishToStudents').checked;
+    uploads.forEach(upload => {
+        uploadsList.innerHTML += `
+            <div class="course-entry shadow-sm mb-2" style="padding: 1rem 1.5rem;">
+                <div class="flex-grow-1">
+                    <h6 class="fw-bold mb-0">${upload.title}</h6>
+                    <p class="text-muted small mb-0">${upload.courseId} | ${formatDate(upload.uploadDate)}</p>
+                </div>
+                <span class="badge bg-light text-dark border">${upload.category}</span>
+            </div>
+        `;
+    });
+}
 
-    // Save to localStorage for calendars
-    const newEvent = {
-        title: `${course}: ${name} (${weight}%)`,
-        start: date,
-        color: course.includes('Calculus') ? '#ed8936' : '#1a365d',
-        extendedProps: {
-            topic: topic,
-            published: isPublished
-        }
-    };
+function renderExams(exams) {
+    const examsList = document.getElementById('upcoming-exams-list');
+    examsList.innerHTML = '';
 
-    let events = JSON.parse(localStorage.getItem('courseLinkEvents')) || [];
-    events.push(newEvent);
-    localStorage.setItem('courseLinkEvents', JSON.stringify(events));
+    if (!exams.length) {
+        examsList.innerHTML = '<p class="text-muted">No upcoming exams or quizzes.</p>';
+        return;
+    }
 
-    alert(`${name} scheduled successfully!\nCourse: ${course}\nDate: ${date}\nTopic: ${topic}\nWeight: ${weight}%\nPublished to Student Calendars: ${isPublished ? 'Yes' : 'No'}`);
-    bootstrap.Modal.getInstance(document.getElementById('createExamModal')).hide();
-    this.reset();
-});
+    exams.forEach(exam => {
+        examsList.innerHTML += `
+            <div class="alert-box mb-3" style="border-left: 4px solid var(--cl-primary);">
+                <small class="text-primary fw-bold text-uppercase" style="font-size: 0.7rem;">${formatDate(exam.date)} | ${exam.courseId}</small>
+                <h6 class="fw-bold mb-1 mt-1">${exam.title}</h6>
+                <p class="small text-muted mb-0">${exam.type} | ${exam.weightPercent}% | ${exam.topic || 'No topic set'}</p>
+            </div>
+        `;
+    });
+}
+
+function setupUploadForm() {
+    const uploadForm = document.getElementById('uploadForm');
+    if (!uploadForm) {
+        return;
+    }
+
+    uploadForm.addEventListener('submit', event => {
+        event.preventDefault();
+
+        const formData = new FormData(uploadForm);
+
+        fetch('api/upload-material', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.success ? 'Material uploaded successfully.' : 'Material upload failed.');
+            if (data.success) {
+                closeModal('uploadMaterialModal');
+                uploadForm.reset();
+                loadInstructorDashboard();
+            }
+        })
+        .catch(error => {
+            console.error('Upload Error:', error);
+            alert('Could not connect to the upload service.');
+        });
+    });
+}
+
+function setupExamForm() {
+    const examForm = document.getElementById('examForm');
+    if (!examForm) {
+        return;
+    }
+
+    examForm.addEventListener('submit', event => {
+        event.preventDefault();
+
+        const params = new URLSearchParams(new FormData(examForm));
+        params.set('published', document.getElementById('publishToStudents').checked);
+
+        fetch('api/add-exam', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString()
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.success ? 'Exam scheduled successfully.' : 'Exam could not be saved.');
+            if (data.success) {
+                closeModal('createExamModal');
+                examForm.reset();
+                loadInstructorDashboard();
+            }
+        })
+        .catch(error => {
+            console.error('Exam Save Error:', error);
+            alert('Could not connect to the exam service.');
+        });
+    });
+}
+
+function closeModal(id) {
+    const modal = bootstrap.Modal.getInstance(document.getElementById(id));
+    if (modal) {
+        modal.hide();
+    }
+}
+
+function formatDate(value) {
+    if (!value) {
+        return '-';
+    }
+
+    return new Date(value).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+    });
+}
+
+function courseCode(name, index) {
+    if (name === 'Intro to Programming') {
+        return 'CMP120';
+    }
+
+    if (name === 'Calculus II') {
+        return 'MTH104';
+    }
+
+    return `COURSE${index + 1}`;
+}
