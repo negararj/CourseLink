@@ -77,23 +77,25 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="instructorUploadForm">
+                    <form id="instructorUploadForm" enctype="multipart/form-data">
+                        <input type="hidden" name="courseId" value="CMP120">
+
                         <div class="mb-3">
                             <label class="form-label small fw-bold">Document Title</label>
-                            <input type="text" class="form-control" id="materialTitle" placeholder="e.g. Chapter 1 Summary" required>
+                            <input type="text" class="form-control" id="materialTitle" name="title" placeholder="e.g. Chapter 1 Summary" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label small fw-bold">Category</label>
-                            <select class="form-select" id="materialType">
-                                <option>Lecture Notes</option>
-                                <option>Past Paper</option>
-                                <option>Quiz Solution</option>
-                                <option>External Reference</option>
+                            <select class="form-select" id="materialType" name="category">
+                                <option value="Lecture Notes">Lecture Notes</option>
+                                <option value="Past Paper">Past Paper</option>
+                                <option value="Quiz Solution">Quiz Solution</option>
+                                <option value="External Reference">External Reference</option>
                             </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label small fw-bold">File Selection</label>
-                            <input type="file" class="form-control" id="fileInput" required>
+                            <input type="file" class="form-control" id="fileInput" name="file" required>
                         </div>
                         <button type="submit" class="btn btn-primary w-100 mt-2 py-2">Publish to Students</button>
                     </form>
