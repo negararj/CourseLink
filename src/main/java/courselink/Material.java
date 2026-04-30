@@ -1,3 +1,5 @@
+package courselink;
+
 import java.time.LocalDateTime;
 
 public class Material {

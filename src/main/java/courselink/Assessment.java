@@ -1,3 +1,4 @@
+package courselink;
 import java.time.LocalDate;
 
 public class Assessment {
