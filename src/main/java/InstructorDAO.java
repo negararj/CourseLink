@@ -1,8 +1,11 @@
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 public class InstructorDAO {
 
@@ -55,4 +58,37 @@ public class InstructorDAO {
             return false;
         }
     }
+	
+	public List<Course> getCoursesForInstructor(int instructorId) {
+	    List<Course> courses = new ArrayList<>();
+	    
+	    // We use a SELECT statement to grab the data instead of an INSERT statement
+	    String sql = "SELECT * FROM Courses WHERE instructor_id = ?";
+	    
+	    try (Connection conn = DBConnection.getConnection();
+	         PreparedStatement stmt = conn.prepareStatement(sql)) {
+	        
+	        stmt.setInt(1, instructorId); // Replace the '?' with the instructor's ID
+	        
+	        // executeQuery() is used for SELECT statements, it returns a ResultSet (a table of data)
+	        ResultSet rs = stmt.executeQuery();
+	        
+	        // Loop through every row the database gives back
+	        while (rs.next()) {
+	            Course course = new Course();
+	            course.setId(rs.getLong("course_id"));
+	            course.setTitle(rs.getString("title"));
+	            course.setCode(rs.getString("course_code"));
+	            course.setCredits(rs.getInt("credits"));
+	            
+	            // Add this completed course object to our list
+	            courses.add(course);
+	        }
+	        
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	    
+	    return courses;
+	}
 }
