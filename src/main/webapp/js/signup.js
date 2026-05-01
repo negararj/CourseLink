@@ -1,4 +1,4 @@
-document.getElementById('signupForm').addEventListener('submit', async function(e) {
+document.getElementById('signupForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
     var form = e.target;
@@ -16,29 +16,37 @@ document.getElementById('signupForm').addEventListener('submit', async function(
     submitButton.disabled = true;
     submitButton.textContent = 'Creating...';
 
-    try {
-        var response = await fetch('api/signup', {
+    fetch('api/signup', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
             },
             body: params.toString(),
             credentials: 'same-origin'
+        })
+        .then(function(response) {
+            return response.json().then(function(result) {
+                return {
+                    ok: response.ok,
+                    result: result
+                };
+            });
+        })
+        .then(function(data) {
+            if (!data.ok || !data.result.success) {
+                setMessage(data.result.message || 'Could not create your account.', false);
+                return;
+            }
+
+            redirectToDashboard(data.result.redirect);
+        })
+        .catch(function() {
+            setMessage('Could not connect to the server. Please try again.', false);
+        })
+        .finally(function() {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Create Account';
         });
-
-        var result = await response.json();
-        if (!response.ok || !result.success) {
-            setMessage(result.message || 'Could not create your account.', false);
-            return;
-        }
-
-        redirectToDashboard(result.redirect);
-    } catch (error) {
-        setMessage('Could not connect to the server. Please try again.', false);
-    } finally {
-        submitButton.disabled = false;
-        submitButton.textContent = 'Create Account';
-    }
 });
 
 function redirectToDashboard(redirect) {
@@ -58,7 +66,7 @@ function setMessage(message, success) {
     if (!alert) {
         alert = document.createElement('div');
         alert.id = 'signupMessage';
-        form.prepend(alert);
+        form.insertBefore(alert, form.firstChild);
     }
 
     alert.className = success ? 'alert alert-success py-2 small' : 'alert alert-danger py-2 small';

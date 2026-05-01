@@ -1,4 +1,4 @@
-document.getElementById('loginForm').addEventListener('submit', async function(e) {
+document.getElementById('loginForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
     var form = e.target;
@@ -13,29 +13,37 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     submitButton.disabled = true;
     submitButton.textContent = 'Logging in...';
 
-    try {
-        var response = await fetch('api/login', {
+    fetch('api/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
             },
             body: params.toString(),
             credentials: 'same-origin'
+        })
+        .then(function(response) {
+            return response.json().then(function(result) {
+                return {
+                    ok: response.ok,
+                    result: result
+                };
+            });
+        })
+        .then(function(data) {
+            if (!data.ok || !data.result.success) {
+                setMessage(data.result.message || 'Login failed. Please try again.');
+                return;
+            }
+
+            redirectToDashboard(data.result.redirect);
+        })
+        .catch(function() {
+            setMessage('Could not connect to the server. Please try again.');
+        })
+        .finally(function() {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Login';
         });
-
-        var result = await response.json();
-        if (!response.ok || !result.success) {
-            setMessage(result.message || 'Login failed. Please try again.');
-            return;
-        }
-
-        redirectToDashboard(result.redirect);
-    } catch (error) {
-        setMessage('Could not connect to the server. Please try again.');
-    } finally {
-        submitButton.disabled = false;
-        submitButton.textContent = 'Login';
-    }
 });
 
 function redirectToDashboard(redirect) {
@@ -56,7 +64,7 @@ function setMessage(message) {
         alert = document.createElement('div');
         alert.id = 'loginMessage';
         alert.className = 'alert alert-danger py-2 small';
-        form.prepend(alert);
+        form.insertBefore(alert, form.firstChild);
     }
 
     alert.textContent = message;
