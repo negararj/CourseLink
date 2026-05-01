@@ -28,6 +28,17 @@ CREATE TABLE IF NOT EXISTS Materials (
     upload_date DATETIME NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS Users (
+    user_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(80) NOT NULL,
+    last_name VARCHAR(80) NOT NULL,
+    email VARCHAR(160) NOT NULL UNIQUE,
+    major VARCHAR(80),
+    role ENUM('student', 'instructor') NOT NULL DEFAULT 'student',
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 INSERT INTO courses (name, instructor)
 SELECT 'Intro to Programming', 'Dr. Smith'
 WHERE NOT EXISTS (
