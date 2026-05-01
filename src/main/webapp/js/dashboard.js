@@ -12,53 +12,9 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("current-gpa").innerText = dashboardData.semGPA;
     document.getElementById("current-cgpa").innerText = dashboardData.totalCGPA;
 
-    loadCurrentUser();
     loadDashboardCourses();
     loadAlerts();
 });
-
-function loadCurrentUser() {
-    fetch("api/current-user", {
-        credentials: "same-origin"
-    })
-        .then(response => {
-            if (!response.ok) {
-                return null;
-            }
-            return response.json();
-        })
-        .then(user => {
-            if (!user || !user.authenticated) {
-                return;
-            }
-
-            const welcomeText = document.getElementById("welcomeText");
-            const userInitials = document.getElementById("userInitials");
-            const firstName = (user.fullName || "").trim().split(/\s+/)[0];
-
-            if (welcomeText && firstName) {
-                welcomeText.innerText = `Welcome, ${firstName}`;
-            }
-
-            if (userInitials) {
-                userInitials.innerText = (user.initials || initialsFrom(user.fullName, user.email)).toUpperCase();
-            }
-        })
-        .catch(error => {
-            console.error("Current User Error:", error);
-        });
-}
-
-function initialsFrom(fullName, email) {
-    const source = (fullName || email || "User").trim();
-    const parts = source.split(/\s+/);
-
-    if (parts.length === 1) {
-        return parts[0].substring(0, 2).toUpperCase();
-    }
-
-    return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
-}
 
 function loadDashboardCourses() {
     const courseList = document.getElementById("course-list-container");
