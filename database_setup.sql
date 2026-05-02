@@ -8,23 +8,8 @@ CREATE TABLE IF NOT EXISTS courses (
     instructor VARCHAR(120) NOT NULL
 );
 
-SET @course_code_exists = (
-    SELECT COUNT(*)
-    FROM INFORMATION_SCHEMA.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE()
-      AND TABLE_NAME = 'courses'
-      AND COLUMN_NAME = 'course_code'
-);
-
-SET @add_course_code_sql = IF(
-    @course_code_exists = 0,
-    'ALTER TABLE courses ADD COLUMN course_code VARCHAR(40) NULL AFTER id',
-    'SELECT 1'
-);
-
-PREPARE add_course_code_stmt FROM @add_course_code_sql;
-EXECUTE add_course_code_stmt;
-DEALLOCATE PREPARE add_course_code_stmt;
+ALTER TABLE courses
+ADD COLUMN IF NOT EXISTS course_code VARCHAR(40) NULL AFTER id;
 
 DELETE FROM courses
 WHERE (name = 'Intro to Programming' AND instructor = 'Dr. Smith')
