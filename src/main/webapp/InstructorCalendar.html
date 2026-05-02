@@ -26,8 +26,8 @@
                 <span class="fw-bold">CourseLink</span>
             </a>
             <div class="ms-auto d-flex align-items-center">
-                <span class="me-3 text-muted d-none d-md-block">Welcome, Dr. Smith</span>
-                <a href="Profile.html" class="user-avatar text-decoration-none">DS</a>
+                <span class="me-3 text-muted d-none d-md-block">Welcome, Instructor</span>
+                <a href="Profile.html" class="user-avatar text-decoration-none">IN</a>
             </div>
         </div>
     </nav>
@@ -73,8 +73,7 @@
                         <div class="mb-3">
                             <label class="form-label small fw-bold">Course</label>
                             <select class="form-select" id="eventCourse">
-                                <option value="CMP120">Intro to Programming</option>
-                                <option value="MTH104">Calculus II</option>
+                                <option value="">Loading courses...</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -109,15 +108,10 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let calendar;
+        let courseById = {};
+
         document.addEventListener("DOMContentLoaded", function () {
             const calendarEl = document.getElementById("calendar");
-            
-            // Load existing events from localStorage or use defaults
-            let instructorEvents = JSON.parse(localStorage.getItem('courseLinkEvents')) || [
-                { title: "Intro to Programming: Midterm Exam 1 (25%)", start: "2026-03-25", color: "#1a365d" },
-                { title: "Calculus II: Quiz 3 (15%)", start: "2026-03-30", color: "#ed8936" },
-                { title: "Intro to Programming: Project Due (15%)", start: "2026-04-20", color: "#1a365d" }
-            ];
 
             calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: "dayGridMonth",
@@ -126,49 +120,88 @@
                     center: "title",
                     right: ""
                 },
-                events: instructorEvents,
+                events: [],
                 height: "auto"
             });
 
+            window.calendar = calendar;
             calendar.render();
 
+            loadCourses().then(loadEvents);
+            setupEventForm();
+        });
+
+        function loadCourses() {
+            return fetch('CourseServlet')
+                .then(response => response.json())
+                .then(courses => {
+                    const select = document.getElementById('eventCourse');
+                    select.innerHTML = '';
+                    courseById = {};
+
+                    if (!courses.length) {
+                        const option = document.createElement('option');
+                        option.value = '';
+                        option.textContent = 'Create a course first';
+                        select.appendChild(option);
+                        select.disabled = true;
+                        return;
+                    }
+
+                    select.disabled = false;
+                    courses.forEach(course => {
+                        courseById[String(course.id)] = course;
+                        const option = document.createElement('option');
+                        option.value = course.id;
+                        option.textContent = `${course.name} (#${course.id})`;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Course Load Error:', error);
+                });
+        }
+
+        function loadEvents() {
+            fetch('AssessmentServlet')
+                .then(response => response.json())
+                .then(assessments => {
+                    calendar.removeAllEvents();
+                    assessments.forEach(assessment => {
+                        const course = courseById[String(assessment.courseId)];
+                        const courseName = course ? course.name : `Course #${assessment.courseId}`;
+                        calendar.addEvent({
+                            title: `${courseName}: ${assessment.title} (${assessment.weightPercent}%)`,
+                            start: assessment.date,
+                            color: assessment.type === 'Quiz' ? '#ed8936' : '#1a365d',
+                            extendedProps: {
+                                topic: assessment.topic || '',
+                                published: assessment.published
+                            }
+                        });
+                    });
+                })
+                .catch(error => {
+                    console.error('Assessment Load Error:', error);
+                    alert('Could not load calendar events.');
+                });
+        }
+
+        function setupEventForm() {
             document.getElementById('addEventForm').addEventListener('submit', function(e) {
                 e.preventDefault();
-                const title = document.getElementById('eventTitle').value;
-                const date = document.getElementById('eventDate').value;
-                const courseSelect = document.getElementById('eventCourse');
-                const courseId = courseSelect.value;
-                const course = courseSelect.options[courseSelect.selectedIndex].text;
-                const weight = document.getElementById('eventWeight').value;
-                const topic = document.getElementById('eventTopic').value;
-                const isPublished = document.getElementById('publishToStudents').checked;
-                const type = title.toLowerCase().includes('quiz') ? 'Quiz' : 'Exam';
-
-                const newEvent = {
-                    title: `${course}: ${title} (${weight}%)`,
-                    start: date,
-                    color: course === 'Calculus II' ? '#ed8936' : '#1a365d',
-                    extendedProps: {
-                        topic: topic,
-                        published: isPublished
-                    }
-                };
-
-                // Add to calendar UI
-                calendar.addEvent(newEvent);
-
-                // Save to localStorage
-                instructorEvents.push(newEvent);
-                localStorage.setItem('courseLinkEvents', JSON.stringify(instructorEvents));
 
                 const params = new URLSearchParams();
-                params.append('courseId', courseId);
+                const title = document.getElementById('eventTitle').value.trim();
+                const lowerTitle = title.toLowerCase();
+
+                params.append('courseId', document.getElementById('eventCourse').value);
                 params.append('title', title);
-                params.append('type', type);
-                params.append('weight', weight);
-                params.append('date', date);
-                params.append('topic', topic);
-                params.append('published', isPublished);
+                params.append('type', lowerTitle.includes('quiz') ? 'Quiz' : 'Exam');
+                params.append('weight', document.getElementById('eventWeight').value);
+                params.append('date', document.getElementById('eventDate').value);
+                params.append('topic', document.getElementById('eventTopic').value.trim());
+                params.append('published', document.getElementById('publishToStudents').checked);
 
                 fetch('api/add-exam', {
                     method: 'POST',
@@ -177,20 +210,20 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    alert(data.success
-                        ? `${title} added and published successfully.`
-                        : `${title} was added to this calendar, but could not be saved to the database.`);
+                    if (!data.success) {
+                        throw new Error('Assessment could not be saved.');
+                    }
+
+                    bootstrap.Modal.getInstance(document.getElementById('addEventModal')).hide();
+                    this.reset();
+                    loadEvents();
                 })
                 .catch(error => {
                     console.error('Assessment Save Error:', error);
-                    alert(`${title} was added to this calendar, but the server could not be reached.`);
-                })
-                .finally(() => {
-                    bootstrap.Modal.getInstance(document.getElementById('addEventModal')).hide();
-                    this.reset();
+                    alert('Could not save the assessment.');
                 });
             });
-        });
+        }
     </script>
     <script src="js/current_user.js"></script>
 </body>

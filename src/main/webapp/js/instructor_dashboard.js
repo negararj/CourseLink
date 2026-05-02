@@ -19,6 +19,7 @@ function renderDashboard(data) {
     renderCourses(data.courses || []);
     renderUploads(data.recentUploads || []);
     renderExams(data.upcomingExams || []);
+    populateCourseSelects(data.courses || []);
 }
 
 function updateStats(data) {
@@ -41,7 +42,7 @@ function renderCourses(courses) {
     }
 
     courses.forEach((course, index) => {
-        const code = courseCode(course.name, index);
+        const courseId = String(course.id);
         coursesList.innerHTML += `
             <div class="course-entry shadow-sm mb-3">
                 <div class="feature-icon ${index % 2 === 0 ? 'one' : 'two'} me-4" style="width:55px; height:55px; font-size:1rem;">
@@ -49,14 +50,44 @@ function renderCourses(courses) {
                 </div>
                 <div class="flex-grow-1">
                     <h5 class="fw-bold mb-0">${course.name}</h5>
-                    <p class="text-muted small mb-0">${code} | ${course.instructor}</p>
+                    <p class="text-muted small mb-0">Course #${courseId} | ${course.instructor}</p>
                 </div>
                 <div class="d-flex gap-2">
-                    <a href="InstructorSyllabus.html?course=${encodeURIComponent(course.name)}" class="btn btn-outline-primary btn-sm rounded-pill px-3">Syllabus</a>
-                    <a href="InstructorMaterials.html?course=${encodeURIComponent(code)}" class="btn btn-primary btn-sm rounded-pill px-3">Manage</a>
+                    <a href="InstructorSyllabus.html?courseId=${encodeURIComponent(courseId)}" class="btn btn-outline-primary btn-sm rounded-pill px-3">Syllabus</a>
+                    <a href="InstructorMaterials.html?courseId=${encodeURIComponent(courseId)}" class="btn btn-primary btn-sm rounded-pill px-3">Manage</a>
                 </div>
             </div>
         `;
+    });
+}
+
+function populateCourseSelects(courses) {
+    const selects = document.querySelectorAll('select[name="courseId"], #examCourse');
+
+    selects.forEach(select => {
+        const currentValue = select.value;
+        select.innerHTML = '';
+
+        if (!courses.length) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'Create a course first';
+            select.appendChild(option);
+            select.disabled = true;
+            return;
+        }
+
+        select.disabled = false;
+        courses.forEach(course => {
+            const option = document.createElement('option');
+            option.value = course.id;
+            option.textContent = `${course.name} (#${course.id})`;
+            select.appendChild(option);
+        });
+
+        if (currentValue && Array.from(select.options).some(option => option.value === currentValue)) {
+            select.value = currentValue;
+        }
     });
 }
 
@@ -183,16 +214,4 @@ function formatDate(value) {
         day: 'numeric',
         year: 'numeric'
     });
-}
-
-function courseCode(name, index) {
-    if (name === 'Intro to Programming') {
-        return 'CMP120';
-    }
-
-    if (name === 'Calculus II') {
-        return 'MTH104';
-    }
-
-    return `COURSE${index + 1}`;
 }

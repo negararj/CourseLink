@@ -22,16 +22,18 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
             credentials: 'same-origin'
         })
         .then(function(response) {
-            return response.json().then(function(result) {
+            return response.text().then(function(text) {
+                var result = parseJson(text);
                 return {
                     ok: response.ok,
+                    status: response.status,
                     result: result
                 };
             });
         })
         .then(function(data) {
             if (!data.ok || !data.result.success) {
-                setMessage(data.result.message || 'Login failed. Please try again.');
+                setMessage(data.result.message || ('Login failed. Server returned status ' + data.status + '.'));
                 return;
             }
 
@@ -45,6 +47,18 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
             submitButton.textContent = 'Login';
         });
 });
+
+function parseJson(text) {
+    if (!text) {
+        return {};
+    }
+
+    try {
+        return JSON.parse(text);
+    } catch (error) {
+        return {};
+    }
+}
 
 function redirectToDashboard(redirect) {
     var allowedRedirects = ['StudentDashboard.html', 'InstructorDashboard.html'];

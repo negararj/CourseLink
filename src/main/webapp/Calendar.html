@@ -30,6 +30,7 @@
                 <span class="fw-bold">CourseLink</span>
             </a>
             <div class="ms-auto d-flex align-items-center">
+                <span class="me-3 text-muted">Welcome, Student</span>
                 <a href="Profile.html" class="user-avatar text-decoration-none">JD</a>
             </div>
         </div>
@@ -72,16 +73,13 @@
     <script>
         document.addEventListener("DOMContentLoaded", function () {
 
-            // =========================
-            // GET COURSE FROM URL
-            // =========================
             const params = new URLSearchParams(window.location.search);
-            const courseName = params.get("course");
+            const courseParam = params.get("courseId") || params.get("course");
 
             const titleEl = document.getElementById("calendarTitle");
 
-            if (courseName) {
-                titleEl.innerText = `${courseName} Calendar`;
+            if (courseParam) {
+                titleEl.innerText = `${courseParam} Calendar`;
             } else {
                 titleEl.innerText = "All Courses Calendar";
             }
@@ -90,8 +88,8 @@
             // INIT CALENDAR
             // =========================
             const calendarEl = document.getElementById("calendar");
-            const eventUrl = courseName
-                ? `CalendarServlet?course=${encodeURIComponent(courseName)}`
+            const eventUrl = courseParam
+                ? `CalendarServlet?course=${encodeURIComponent(courseParam)}`
                 : "CalendarServlet";
 
             const calendar = new FullCalendar.Calendar(calendarEl, {
@@ -118,12 +116,27 @@
 
             calendar.render();
 
-            // =========================
-            // SWITCH VIEW FUNCTION
-            // =========================
             window.changeView = function (viewName) {
                 calendar.changeView(viewName);
             };
+
+            fetch("CourseServlet")
+                .then(response => response.json())
+                .then(courses => {
+                    const courseById = {};
+                    courses.forEach(course => {
+                        courseById[String(course.id)] = course;
+                    });
+
+                    const selectedCourse = courses.find(course => String(course.id) === courseParam || course.name === courseParam);
+                    titleEl.innerText = selectedCourse ? `${selectedCourse.name} Calendar` : "All Courses Calendar";
+                })
+                .catch(error => {
+                    console.error("Calendar Load Error:", error);
+                    if (!courseParam) {
+                        titleEl.innerText = "All Courses Calendar";
+                    }
+                });
 
         });
     </script>

@@ -4,6 +4,8 @@ public class Course {
     private int id;
     private String name;
     private String instructor;
+    private String courseCode;
+    private int credits;
 
     public Course() {}
 
@@ -11,6 +13,7 @@ public class Course {
         this.id = id;
         this.name = name;
         this.instructor = instructor;
+        this.credits = 3;
     }
 
     public int getId() { return id; }
@@ -21,4 +24,10 @@ public class Course {
 
     public String getInstructor() { return instructor; }
     public void setInstructor(String instructor) { this.instructor = instructor; }
+
+    public String getCourseCode() { return courseCode; }
+    public void setCourseCode(String courseCode) { this.courseCode = courseCode; }
+
+    public int getCredits() { return credits; }
+    public void setCredits(int credits) { this.credits = credits; }
 }
