@@ -28,10 +28,13 @@ public class AddExamServlet extends HttpServlet {
 
         if (courseId != null && title != null && type != null && weightValue != null && dateValue != null) {
             try {
-            double weight = Double.parseDouble(weightValue);
-            LocalDate examDate = LocalDate.parse(dateValue);
-            Assessment exam = new Assessment(courseId, title, type, weight, examDate, topic, "", published);
-            ok = dao.addAssessment(exam);
+                double weight = Double.parseDouble(weightValue);
+                LocalDate examDate = LocalDate.parse(dateValue);
+
+                if (weight > 0 && weight <= 100) {
+                    Assessment exam = new Assessment(courseId, title, type, weight, examDate, topic, "", published);
+                    ok = dao.addAssessment(exam);
+                }
             } catch (RuntimeException e) {
                 ok = false;
             }

@@ -1,36 +1,95 @@
-function showTab(tabId) {
-    document.querySelectorAll(".tab-content-section").forEach(el => {
-        el.classList.add("d-none");
+function showTab(tabId, button) {
+    document.querySelectorAll(".tab-content-section").forEach(section => {
+        section.classList.add("d-none");
     });
 
     document.getElementById(tabId).classList.remove("d-none");
 
-    document.querySelectorAll(".nav-pills .nav-link").forEach(btn => {
-        btn.classList.remove("active");
+    document.querySelectorAll(".nav-pills .nav-link").forEach(tabButton => {
+        tabButton.classList.remove("active");
     });
 
-    event.target.classList.add("active");
+    if (button) {
+        button.classList.add("active");
+    }
 }
 
-// =========================
-// GET DATA FROM URL
-// =========================
 const params = new URLSearchParams(window.location.search);
+const requestedCourse = (params.get("courseId") || params.get("course") || params.get("name") || "").trim();
+let selectedCourse = null;
 
-const courseName = params.get("name")?.trim();
-const courseId = params.get("courseId");
-const instructor = params.get("instructor");
-const credits = params.get("credits");
-const grade = params.get("grade");
+document.addEventListener("DOMContentLoaded", () => {
+    loadCourseDetail();
+    renderfaqs();
+});
 
-document.getElementById("courseTitle").innerText = courseName || "Course";
-document.getElementById("courseInstructor").innerText = instructor || "-";
-document.getElementById("courseCredits").innerText = credits || "-";
-document.getElementById("courseGrade").innerText = grade || "-";
+function loadCourseDetail() {
+    if (!requestedCourse) {
+        showCourseFallback();
+        renderAssessmentError("Open this page from My Courses to see assessment details.");
+        return;
+    }
 
-// =========================
-// PREREQUISITES + UNLOCKS
-// =========================
+    fetch("CourseServlet", { credentials: "same-origin" })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Could not load courses.");
+            }
+            return response.json();
+        })
+        .then(courses => {
+            selectedCourse = findCourse(courses || [], requestedCourse);
+
+            if (!selectedCourse) {
+                showCourseFallback();
+                renderAssessmentError("This course could not be found.");
+                return;
+            }
+
+            renderCourseHeader(selectedCourse);
+            renderCourseLists(selectedCourse);
+            loadAssessments(selectedCourse);
+            loadCourseAverage(selectedCourse);
+        })
+        .catch(error => {
+            console.error("Course Detail Error:", error);
+            showCourseFallback();
+            renderAssessmentError("Could not load this course from the database.");
+        });
+}
+
+function findCourse(courses, requested) {
+    const normalized = normalize(requested);
+
+    return courses.find(course =>
+        normalize(course.id) === normalized ||
+        normalize(course.courseCode) === normalized ||
+        normalize(course.name) === normalized
+    );
+}
+
+function renderCourseHeader(course) {
+    document.getElementById("courseTitle").innerText = course.name || "Course";
+    document.getElementById("courseInstructor").innerText = course.instructor || "-";
+    document.getElementById("courseCredits").innerText = course.credits || "-";
+    document.getElementById("courseGrade").innerText = "-";
+
+    const materialsBtn = document.getElementById("materialsBtn");
+    materialsBtn.href = `Materials.html?courseId=${encodeURIComponent(course.id)}`;
+    materialsBtn.innerText = `${course.name} Materials`;
+
+    const gradeTrackerBtn = document.getElementById("gradeTrackerBtn");
+    gradeTrackerBtn.href = `GradeTracker.html?name=${encodeURIComponent(course.name || course.id)}`;
+}
+
+function showCourseFallback() {
+    const fallbackName = requestedCourse || "Course";
+    document.getElementById("courseTitle").innerText = fallbackName;
+    document.getElementById("courseInstructor").innerText = "-";
+    document.getElementById("courseCredits").innerText = "-";
+    document.getElementById("courseGrade").innerText = "-";
+}
+
 const courseDetails = {
     "Intro to Programming": {
         prereq: ["None"],
@@ -46,108 +105,191 @@ const courseDetails = {
     }
 };
 
-const prereqList = document.getElementById("prereqList");
-const unlockList = document.getElementById("unlockList");
+function renderCourseLists(course) {
+    const details = courseDetails[course.name] || {
+        prereq: ["Not specified"],
+        unlocks: ["Not specified"]
+    };
 
-prereqList.innerHTML = "";
-unlockList.innerHTML = "";
-
-const matchedDetails = Object.keys(courseDetails).find(
-    key => key.toLowerCase() === courseName?.toLowerCase()
-);
-
-if (matchedDetails) {
-    courseDetails[matchedDetails].prereq.forEach(item => {
-        prereqList.innerHTML += `<li class="list-group-item">${item}</li>`;
-    });
-
-    courseDetails[matchedDetails].unlocks.forEach(item => {
-        unlockList.innerHTML += `<li class="list-group-item">${item}</li>`;
-    });
-} else {
-    prereqList.innerHTML = `<li class="list-group-item">Not specified</li>`;
-    unlockList.innerHTML = `<li class="list-group-item">Not specified</li>`;
+    renderList("prereqList", details.prereq);
+    renderList("unlockList", details.unlocks);
 }
 
-// =========================
-// GRADE DISTRIBUTION
-// =========================
-const gradeDistributions = {
-    "Intro to Programming": [
-        { name: "Quiz 1", weight: 10, date: "2026-02-24" },
-        { name: "Quiz 2", weight: 10, date: "2026-03-10" },
-        { name: "Midterm Exam", weight: 25, date: "2026-03-25" },
-        { name: "Homework", weight: 10, date: "2026-04-05" },
-        { name: "Project", weight: 15, date: "2026-04-20" },
-        { name: "Final Exam", weight: 30, date: "2026-05-15" }
-    ],
-    "Calculus II": [
-        { name: "Quiz", weight: 15, date: "2026-02-24" },
-        { name: "Midterm", weight: 35, date: "2026-03-20" },
-        { name: "Final Exam", weight: 50, date: "2026-05-10" }
-    ]
-};
+function renderList(elementId, items) {
+    const list = document.getElementById(elementId);
+    list.innerHTML = "";
 
-const distTable = document.getElementById("gradeDistributionTable");
+    items.forEach(item => {
+        const li = document.createElement("li");
+        li.className = "list-group-item";
+        li.textContent = item;
+        list.appendChild(li);
+    });
+}
+
+function loadAssessments(course) {
+    const courseKey = course.id || course.courseCode || course.name;
+
+    fetch(`AssessmentServlet?course=${encodeURIComponent(courseKey)}`, { credentials: "same-origin" })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Could not load assessments.");
+            }
+            return response.json();
+        })
+        .then(assessments => {
+            renderAssessmentBreakdown(assessments || []);
+            renderGradingScheme(assessments || []);
+        })
+        .catch(error => {
+            console.error("Assessment Load Error:", error);
+            renderAssessmentError("Could not load instructor assessments.");
+        });
+}
+
+function loadCourseAverage(course) {
+    const courseKey = course.name || course.courseCode || course.id;
+    const query = new URLSearchParams({
+        course: courseKey,
+        target: "90"
+    });
+
+    fetch(`GradeTrackerServlet?${query.toString()}`, { credentials: "same-origin" })
+        .then(response => {
+            if (!response.ok) {
+                return null;
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (!data) {
+                return;
+            }
+
+            document.getElementById("courseGrade").innerText = formatNumber(data.currentAverage || 0);
+        })
+        .catch(error => {
+            console.error("Course Average Error:", error);
+        });
+}
+
+function renderAssessmentBreakdown(assessments) {
+    const table = document.getElementById("gradeDistributionTable");
+    table.innerHTML = "";
+
+    if (!assessments.length) {
+        table.innerHTML = `
+            <tr>
+                <td colspan="2" class="text-muted">No published assessments found for this course.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    assessments.forEach((assessment, index) => {
+        const dateLabel = assessment.date ? formatDate(assessment.date) : "No date";
+        const materialsUrl = `Materials.html?courseId=${encodeURIComponent(selectedCourse.id)}&assessment=${encodeURIComponent(index)}`;
+        const calendarUrl = `Calendar.html?course=${encodeURIComponent(selectedCourse.id)}`;
+
+        table.innerHTML += `
+            <tr>
+                <td>
+                    <a href="${materialsUrl}" class="text-decoration-none fw-bold text-primary">
+                        ${escapeHtml(assessment.title)}
+                    </a>
+                    <span class="badge bg-light text-dark ms-2">
+                        <a href="${calendarUrl}" class="text-decoration-none text-dark">${escapeHtml(dateLabel)}</a>
+                    </span>
+                    <div class="small text-muted">${escapeHtml(assessment.type || "Assessment")}${assessment.topic ? " | " + escapeHtml(assessment.topic) : ""}</div>
+                </td>
+                <td>${formatNumber(assessment.weightPercent)}%</td>
+            </tr>
+        `;
+    });
+}
+
+function renderGradingScheme(assessments) {
+    const table = document.getElementById("gradingSchemeTable");
+    const summary = document.getElementById("gradingSchemeSummary");
+    table.innerHTML = "";
+
+    if (!assessments.length) {
+        table.innerHTML = `
+            <tr>
+                <td colspan="2" class="text-muted">No grading weights have been published yet.</td>
+            </tr>
+        `;
+        summary.innerText = "";
+        return;
+    }
+
+    const totalsByType = assessments.reduce((totals, assessment) => {
+        const type = assessment.type || "Assessment";
+        totals[type] = (totals[type] || 0) + Number(assessment.weightPercent || 0);
+        return totals;
+    }, {});
+
+    Object.keys(totalsByType).sort().forEach(type => {
+        table.innerHTML += `
+            <tr>
+                <td>${escapeHtml(type)}</td>
+                <td>${formatNumber(totalsByType[type])}%</td>
+            </tr>
+        `;
+    });
+
+    const totalWeight = assessments.reduce((sum, assessment) => sum + Number(assessment.weightPercent || 0), 0);
+    summary.innerText = `Published assessment weight: ${formatNumber(totalWeight)}%.`;
+}
+
+function renderAssessmentError(message) {
+    document.getElementById("gradeDistributionTable").innerHTML = `
+        <tr>
+            <td colspan="2" class="text-danger">${escapeHtml(message)}</td>
+        </tr>
+    `;
+    document.getElementById("gradingSchemeTable").innerHTML = `
+        <tr>
+            <td colspan="2" class="text-danger">${escapeHtml(message)}</td>
+        </tr>
+    `;
+    document.getElementById("gradingSchemeSummary").innerText = "";
+}
 
 function formatDate(dateStr) {
     const date = new Date(dateStr);
+    if (Number.isNaN(date.getTime())) {
+        return dateStr;
+    }
+
     return date.toLocaleDateString("en-US", {
         month: "short",
-        day: "numeric"
+        day: "numeric",
+        year: "numeric"
     });
 }
 
-const matchedCourse = Object.keys(gradeDistributions).find(
-    key => key.toLowerCase() === courseName?.toLowerCase()
-);
-
-if (matchedCourse) {
-    distTable.innerHTML = "";
-
-    gradeDistributions[matchedCourse].forEach((item, index) => {
-        distTable.innerHTML += `
-                <tr>
-                    <td>
-                        <a href="Materials.html?course=${encodeURIComponent(courseName)}&assessment=${index}" 
-                           class="text-decoration-none fw-bold text-primary">
-                            ${item.name}
-                        </a>
-                        <span class="badge bg-light text-dark ms-2">
-                            <a href="Calendar.html?date=${item.date}" 
-                               onclick="event.stopPropagation()" 
-                               class="text-decoration-none text-dark">
-                                ${formatDate(item.date)}
-                            </a>
-                        </span>
-                    </td>
-                    <td>${item.weight}%</td>
-                </tr>
-            `;
-    });
-} else {
-    distTable.innerHTML = `
-            <tr>
-                <td colspan="2">No assessment data available</td>
-            </tr>
-        `;
+function formatNumber(value) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) {
+        return "0";
+    }
+    return Number.isInteger(number) ? String(number) : number.toFixed(2);
 }
 
-// =========================
-// MATERIAL BUTTON LINK
-// =========================
-const materialsBtn = document.getElementById("materialsBtn");
-
-if (courseId || courseName) {
-    materialsBtn.href = courseId
-        ? `Materials.html?courseId=${encodeURIComponent(courseId)}`
-        : `Materials.html?course=${encodeURIComponent(courseName)}`;
-    materialsBtn.innerText = `${courseName} Materials`;
+function normalize(value) {
+    return String(value || "").trim().toLowerCase();
 }
 
-// =========================
-// FAQs
-// =========================
+function escapeHtml(value) {
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 const faqsData = [];
 
 function renderfaqs() {
@@ -166,9 +308,9 @@ function createPostHTML(post, postIndex) {
         repliesHTML += `
             <div class="reply">
                 <div class="d-flex justify-content-between">
-                    <span>${reply.text}</span>
+                    <span>${escapeHtml(reply.text)}</span>
                     <span class="vote" onclick="likeReply(${postIndex}, ${replyIndex})">
-                        👍 ${reply.likes}
+                        Like ${reply.likes}
                     </span>
                 </div>
             </div>
@@ -179,12 +321,11 @@ function createPostHTML(post, postIndex) {
         <div class="card p-3 post">
             <div class="d-flex justify-content-between">
                 <strong>Student</strong>
-                <span class="vote" onclick="likePost(${postIndex})">👍 ${post.likes}</span>
+                <span class="vote" onclick="likePost(${postIndex})">Like ${post.likes}</span>
             </div>
 
-            <p class="mt-2 mb-2">${post.text}</p>
+            <p class="mt-2 mb-2">${escapeHtml(post.text)}</p>
 
-            <!-- Reply Input -->
             <div class="reply-box">
                 <input type="text" id="replyInput-${postIndex}" class="form-control mb-2" placeholder="Reply...">
                 <button class="btn btn-sm btn-outline-primary" onclick="addReply(${postIndex})">Reply</button>

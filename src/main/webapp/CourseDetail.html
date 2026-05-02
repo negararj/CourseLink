@@ -21,6 +21,7 @@
                 <span class="fw-bold">CourseLink</span>
             </a>
             <div class="ms-auto d-flex align-items-center">
+                <span class="me-3 text-muted">Welcome, Student</span>
                 <a href="Profile.html" class="user-avatar text-decoration-none">JD</a>
             </div>
         </div>
@@ -64,16 +65,16 @@
             <!-- TABS -->
             <ul class="nav nav-pills mb-3">
                 <li class="nav-item">
-                    <button class="nav-link active" onclick="showTab('syllabus')">Syllabus</button>
+                    <button class="nav-link active" onclick="showTab('syllabus', this)">Syllabus</button>
                 </li>
                 <li class="nav-item">
-                    <button class="nav-link" onclick="showTab('announcements')">Announcements</button>
+                    <button class="nav-link" onclick="showTab('announcements', this)">Announcements</button>
                 </li>
                 <li class="nav-item">
-                    <button class="nav-link" onclick="showTab('faqs')">FAQs</button>
+                    <button class="nav-link" onclick="showTab('faqs', this)">FAQs</button>
                 </li>
                 <li class="nav-item">
-                    <button class="nav-link" onclick="showTab('classmates')">Classmates</button>
+                    <button class="nav-link" onclick="showTab('classmates', this)">Classmates</button>
                 </li>
             </ul>
 
@@ -123,14 +124,44 @@
                                 </tr>
                             </thead>
                             <tbody id="gradeDistributionTable">
+                                <tr>
+                                    <td colspan="2" class="text-muted">Loading assessments...</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- GRADING SCHEME -->
+                <!-- COURSE GRADING WEIGHTS -->
+                <div class="card p-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0">Grading Scheme</h5>
+                        <a id="gradeTrackerBtn" href="Evaluate.html" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                            Track Grades
+                        </a>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered text-center align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Assessment Type</th>
+                                    <th>Total Weight (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gradingSchemeTable">
+                                <tr>
+                                    <td colspan="2" class="text-muted">Loading grading scheme...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p id="gradingSchemeSummary" class="small text-muted mb-0"></p>
+                </div>
+
+                <!-- LETTER GRADE SCALE -->
                 <div class="card p-4">
-                    <h5 class="fw-bold mb-3">Grading Scheme</h5>
+                    <h5 class="fw-bold mb-3">Letter Grade Scale</h5>
 
                     <div class="table-responsive">
                         <table class="table table-bordered text-center align-middle">

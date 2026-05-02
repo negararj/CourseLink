@@ -79,13 +79,23 @@ public class InstructorDAO {
 
     public List<Assessment> getAssessmentsByCourse(String courseId) {
         List<Assessment> assessments = new ArrayList<>();
-        String query = "SELECT * FROM Assessments WHERE is_published = true AND (? IS NULL OR course_id = ?) ORDER BY exam_date";
+        String query = "SELECT a.* FROM Assessments a " +
+                "LEFT JOIN courses c ON CAST(c.id AS CHAR) = a.course_id " +
+                "OR c.course_code = a.course_id " +
+                "OR c.name = a.course_id " +
+                "WHERE a.is_published = true " +
+                "AND (? IS NULL OR a.course_id = ? OR CAST(c.id AS CHAR) = ? OR c.course_code = ? OR c.name = ?) " +
+                "ORDER BY a.exam_date, a.assessment_id";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(query)) {
 
-            ps.setString(1, courseId);
-            ps.setString(2, courseId);
+            String normalizedCourseId = courseId == null || courseId.isBlank() ? null : courseId.trim();
+            ps.setString(1, normalizedCourseId);
+            ps.setString(2, normalizedCourseId);
+            ps.setString(3, normalizedCourseId);
+            ps.setString(4, normalizedCourseId);
+            ps.setString(5, normalizedCourseId);
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
