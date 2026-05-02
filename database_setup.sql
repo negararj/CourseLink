@@ -27,12 +27,26 @@ EXECUTE add_course_code_stmt;
 DEALLOCATE PREPARE add_course_code_stmt;
 
 DELETE FROM courses
-WHERE (name = 'Intro to Programming' AND instructor = 'Dr. Smith')
-   OR (name = 'Calculus II' AND instructor = 'Dr. Ahmed');
+WHERE id IN (
+    SELECT id
+    FROM (
+        SELECT id
+        FROM courses
+        WHERE (name = 'Intro to Programming' AND instructor = 'Dr. Smith')
+           OR (name = 'Calculus II' AND instructor = 'Dr. Ahmed')
+    ) AS dummy_courses
+);
 
 UPDATE courses
 SET course_code = CONCAT('COURSE', id)
-WHERE course_code IS NULL OR course_code = '';
+WHERE id IN (
+    SELECT id
+    FROM (
+        SELECT id
+        FROM courses
+        WHERE course_code IS NULL OR course_code = ''
+    ) AS courses_missing_codes
+);
 
 CREATE TABLE IF NOT EXISTS Assessments (
     assessment_id BIGINT AUTO_INCREMENT PRIMARY KEY,
