@@ -21,6 +21,7 @@ function loadStudentDashboard() {
         .then(data => {
             document.getElementById("current-gpa").innerText = formatPercent(data.averageGrade, data.gradedCredits);
             document.getElementById("current-cgpa").innerText = formatGpa(data.totalCGPA, data.gradedCredits);
+            renderCreditProgress(data.totalCredits);
 
             renderDashboardCourses(data.enrolledCourses || []);
             renderAlerts(data.alerts || []);
@@ -30,6 +31,15 @@ function loadStudentDashboard() {
             courseList.innerHTML = `<p class="text-danger">Could not load your enrolled courses.</p>`;
             alertList.innerHTML = `<p class="text-danger">Could not load alerts.</p>`;
         });
+}
+
+function renderCreditProgress(totalCredits) {
+    const semesterCreditTarget = 18;
+    const credits = Number(totalCredits) || 0;
+    const percent = Math.min(100, Math.max(0, (credits / semesterCreditTarget) * 100));
+
+    document.getElementById("semester-credits").innerText = `${credits} / ${semesterCreditTarget}`;
+    document.getElementById("semester-credits-bar").style.width = `${percent}%`;
 }
 
 function renderDashboardCourses(courses) {
