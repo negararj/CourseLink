@@ -73,77 +73,11 @@
     <script>
         document.addEventListener("DOMContentLoaded", function () {
 
-            // =========================
-            // GET COURSE FROM URL
-            // =========================
             const params = new URLSearchParams(window.location.search);
-            const courseName = params.get("course");
+            const courseParam = params.get("courseId") || params.get("course");
 
             const titleEl = document.getElementById("calendarTitle");
 
-            if (courseName) {
-                titleEl.innerText = `${courseName} Calendar`;
-            } else {
-                titleEl.innerText = "All Courses Calendar";
-            }
-
-            // =========================
-            // SYLLABUS DATA
-            // =========================
-            const allAssessments = {
-                "Intro to Programming": [
-                    { title: "Quiz 1", date: "2026-02-24", weight: 10 },
-                    { title: "Quiz 2", date: "2026-03-10", weight: 10 },
-                    { title: "Midterm Exam", date: "2026-03-25", weight: 25 },
-                    { title: "Homework", date: "2026-04-05", weight: 10 },
-                    { title: "Project", date: "2026-04-20", weight: 15 },
-                    { title: "Final Exam", date: "2026-05-15", weight: 30 }
-                ],
-                "Calculus II": [
-                    { title: "Quiz", date: "2026-02-24", weight: 15 },
-                    { title: "Midterm", date: "2026-03-20", weight: 35 },
-                    { title: "Final Exam", date: "2026-05-10", weight: 50 }
-                ]
-            };
-
-            // =========================
-            // BUILD EVENTS
-            // =========================
-            let events = [];
-
-            // Add hardcoded syllabus data
-            if (courseName && allAssessments[courseName]) {
-                events = allAssessments[courseName].map(item => ({
-                    title: `${item.title} (${item.weight}%)`,
-                    start: item.date
-                }));
-            } else {
-                Object.keys(allAssessments).forEach(course => {
-                    allAssessments[course].forEach(item => {
-                        events.push({
-                            title: `${course}: ${item.title} (${item.weight}%)`,
-                            start: item.date
-                        });
-                    });
-                });
-            }
-
-            // =========================
-            // LOAD INSTRUCTOR EVENTS
-            // =========================
-            const instructorEvents = JSON.parse(localStorage.getItem('courseLinkEvents')) || [];
-            instructorEvents.forEach(evt => {
-                // Only show published events for the student, or specific course
-                if (evt.extendedProps && evt.extendedProps.published) {
-                    if (!courseName || evt.title.includes(courseName)) {
-                        events.push(evt);
-                    }
-                }
-            });
-
-            // =========================
-            // INIT CALENDAR
-            // =========================
             const calendarEl = document.getElementById("calendar");
 
             const calendar = new FullCalendar.Calendar(calendarEl, {
@@ -155,7 +89,7 @@
                     right: ""
                 },
 
-                events: events,
+                events: [],
 
                 eventClick: function (info) {
                     alert(info.event.title);
@@ -166,12 +100,45 @@
 
             calendar.render();
 
-            // =========================
-            // SWITCH VIEW FUNCTION
-            // =========================
             window.changeView = function (viewName) {
                 calendar.changeView(viewName);
             };
+
+            fetch("CourseServlet")
+                .then(response => response.json())
+                .then(courses => {
+                    const courseById = {};
+                    courses.forEach(course => {
+                        courseById[String(course.id)] = course;
+                    });
+
+                    const selectedCourse = courses.find(course => String(course.id) === courseParam || course.name === courseParam);
+                    titleEl.innerText = selectedCourse ? `${selectedCourse.name} Calendar` : "All Courses Calendar";
+
+                    const assessmentUrl = selectedCourse
+                        ? `AssessmentServlet?course=${encodeURIComponent(selectedCourse.id)}`
+                        : "AssessmentServlet";
+
+                    return fetch(assessmentUrl)
+                        .then(response => response.json())
+                        .then(assessments => {
+                            assessments.forEach(assessment => {
+                                const course = courseById[String(assessment.courseId)];
+                                const courseName = course ? course.name : `Course #${assessment.courseId}`;
+                                const titlePrefix = selectedCourse ? "" : `${courseName}: `;
+
+                                calendar.addEvent({
+                                    title: `${titlePrefix}${assessment.title} (${assessment.weightPercent}%)`,
+                                    start: assessment.date,
+                                    color: assessment.type === "Quiz" ? "#ed8936" : "#1a365d"
+                                });
+                            });
+                        });
+                })
+                .catch(error => {
+                    console.error("Calendar Load Error:", error);
+                    titleEl.innerText = "Calendar unavailable";
+                });
 
         });
     </script>

@@ -1,44 +1,6 @@
 let courses = [];
-
-// Assessment data stays static for this step. We are only connecting the course list.
-const assessmentData = {
-    "Intro to Programming": [
-        {
-            name: "Quiz 1",
-            type: "quiz",
-            weight: 10,
-            date: "2026-02-24",
-            chapters: ["Chapter 1: Introduction", "Chapter 2: Variables & Data Types"],
-            instructions: "Answer 10 multiple choice questions. Time limit: 30 minutes."
-        },
-        {
-            name: "Midterm Exam",
-            type: "midterm",
-            weight: 25,
-            date: "2026-03-25",
-            chapters: ["Chapter 1-4: All topics covered", "Problem solving & debugging"],
-            instructions: "2-hour exam covering all topics. Bring calculator. No notes allowed."
-        }
-    ],
-    "Calculus II": [
-        {
-            name: "Quiz",
-            type: "quiz",
-            weight: 15,
-            date: "2026-02-24",
-            chapters: ["Chapter 1: Integration techniques"],
-            instructions: "10 problems on integration methods. Time limit: 45 minutes."
-        },
-        {
-            name: "Final Exam",
-            type: "exam",
-            weight: 50,
-            date: "2026-05-10",
-            chapters: ["Chapters 1-6: Comprehensive"],
-            instructions: "3-hour final exam covering entire course."
-        }
-    ]
-};
+let selectedCourse = null;
+let selectedAssessments = [];
 
 const cardContainer = document.getElementById("course-card-container");
 const detailSection = document.getElementById("course-detail-section");
@@ -90,67 +52,77 @@ function renderCourses(filter = "all", search = "") {
         `;
 
         card.querySelector(".course-card-ui").addEventListener("click", () => {
-            showCourse(course.name);
+            showCourse(course);
         });
 
         cardContainer.appendChild(card);
     });
 }
 
-function renderAssessments(courseName) {
+function renderAssessments(course) {
     const assessmentContainer = document.getElementById("assessment-container");
-    const assessments = assessmentData[courseName] || [];
+    assessmentContainer.innerHTML = `<p class="text-muted">Loading assessments...</p>`;
 
-    assessmentContainer.innerHTML = "";
+    fetch(`AssessmentServlet?course=${encodeURIComponent(course.id)}`)
+        .then(response => response.json())
+        .then(assessments => {
+            selectedAssessments = assessments;
+            assessmentContainer.innerHTML = "";
 
-    if (assessments.length === 0) {
-        assessmentContainer.innerHTML = `<p class="text-muted">No assessments available for this course yet.</p>`;
+            if (!assessments.length) {
+                assessmentContainer.innerHTML = `<p class="text-muted">No assessments available for this course yet.</p>`;
+                return;
+            }
+
+            assessments.forEach((assessment, index) => {
+                const assessmentCard = document.createElement("div");
+                assessmentCard.className = "col-md-6 col-lg-4";
+                assessmentCard.innerHTML = `
+                    <div class="assessment-card p-4 border rounded-3 cursor-pointer" role="button">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="fw-bold mb-0">${assessment.title}</h5>
+                            <span class="badge bg-primary">${assessment.weightPercent}%</span>
+                        </div>
+                        <p class="text-muted small mb-2">${assessment.type}</p>
+                        <p class="small mb-0">${formatDate(assessment.date)}</p>
+                    </div>
+                `;
+
+                assessmentCard.querySelector(".assessment-card").addEventListener("click", () => {
+                    showAssessmentDetails(index);
+                });
+
+                assessmentContainer.appendChild(assessmentCard);
+            });
+        })
+        .catch(error => {
+            console.error("Assessment Load Error:", error);
+            assessmentContainer.innerHTML = `<p class="text-danger">Could not load assessments.</p>`;
+        });
+}
+
+function showAssessmentDetails(assessmentIndex) {
+    const assessment = selectedAssessments[assessmentIndex];
+    if (!assessment) {
         return;
     }
 
-    assessments.forEach((assessment, index) => {
-        const assessmentCard = document.createElement("div");
-        assessmentCard.className = "col-md-6 col-lg-4";
-        assessmentCard.innerHTML = `
-            <div class="assessment-card p-4 border rounded-3 cursor-pointer" role="button">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h5 class="fw-bold mb-0">${assessment.name}</h5>
-                    <span class="badge bg-primary">${assessment.weight}%</span>
-                </div>
-                <p class="text-muted small mb-2">${assessment.type}</p>
-                <p class="small mb-0">${new Date(assessment.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
-            </div>
-        `;
-
-        assessmentCard.querySelector(".assessment-card").addEventListener("click", () => {
-            showAssessmentDetails(courseName, index);
-        });
-
-        assessmentContainer.appendChild(assessmentCard);
-    });
-}
-
-function showAssessmentDetails(courseName, assessmentIndex) {
-    const assessment = assessmentData[courseName][assessmentIndex];
     const detailsSection = document.getElementById("assessment-details-section");
-    const chaptersHtml = assessment.chapters.map(chapter => `<li class="list-group-item">${chapter}</li>`).join("");
 
     detailsSection.innerHTML = `
         <button class="btn btn-sm btn-link mb-3 p-0 text-decoration-none" onclick="hideAssessmentDetails()">Back to assessments</button>
         <div class="card p-4">
-            <h3 class="fw-bold mb-2">${assessment.name}</h3>
-            <p class="text-muted mb-4">Weight: <strong>${assessment.weight}%</strong> | Due: <strong>${new Date(assessment.date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</strong></p>
+            <h3 class="fw-bold mb-2">${assessment.title}</h3>
+            <p class="text-muted mb-4">Weight: <strong>${assessment.weightPercent}%</strong> | Due: <strong>${formatDate(assessment.date, true)}</strong></p>
 
             <div class="row">
                 <div class="col-md-6">
-                    <h5 class="fw-bold mb-3">Chapters Covered</h5>
-                    <ul class="list-group list-group-flush">
-                        ${chaptersHtml}
-                    </ul>
+                    <h5 class="fw-bold mb-3">Topic Covered</h5>
+                    <p class="text-muted">${assessment.topic || "No topic has been added yet."}</p>
                 </div>
                 <div class="col-md-6">
                     <h5 class="fw-bold mb-3">Instructions</h5>
-                    <p class="text-muted">${assessment.instructions}</p>
+                    <p class="text-muted">${assessment.instructions || "No instructions have been added yet."}</p>
                 </div>
             </div>
         </div>
@@ -165,11 +137,13 @@ function hideAssessmentDetails() {
     document.getElementById("course-assessments-section").classList.remove("d-none");
 }
 
-function showCourse(name) {
+function showCourse(course) {
+    selectedCourse = course;
     gridSection.classList.add("d-none");
     detailSection.classList.remove("d-none");
-    document.getElementById("selected-course-title").innerText = name;
-    renderAssessments(name);
+    document.getElementById("selected-course-title").innerText = course.name;
+    renderAssessments(course);
+    renderMaterials(course);
 }
 
 function setupButtons() {
@@ -198,14 +172,63 @@ function setupButtons() {
 
 function openCourseFromUrl() {
     const urlParams = new URLSearchParams(window.location.search);
-    const courseToOpen = urlParams.get("course");
+    const courseToOpen = urlParams.get("courseId") || urlParams.get("course");
     const assessmentToShow = urlParams.get("assessment");
 
     if (courseToOpen) {
-        showCourse(courseToOpen);
+        const course = courses.find(item => String(item.id) === courseToOpen || item.name === courseToOpen);
+        if (!course) {
+            return;
+        }
+
+        showCourse(course);
 
         if (assessmentToShow !== null) {
-            showAssessmentDetails(courseToOpen, parseInt(assessmentToShow));
+            setTimeout(() => showAssessmentDetails(parseInt(assessmentToShow)), 300);
         }
     }
+}
+
+function renderMaterials(course) {
+    const section = document.getElementById("course-materials-section");
+    section.innerHTML = `<p class="text-muted">Loading materials...</p>`;
+
+    fetch(`api/upload-material?courseId=${encodeURIComponent(course.id)}`)
+        .then(response => response.json())
+        .then(materials => {
+            section.innerHTML = "";
+
+            if (!materials.length) {
+                section.innerHTML = `<p class="text-muted">No materials uploaded for this course yet.</p>`;
+                return;
+            }
+
+            materials.forEach(material => {
+                const card = document.createElement("div");
+                card.className = "col-md-6 col-lg-3";
+                card.innerHTML = `
+                    <div class="category-card h-100">
+                        <h5>${material.title}</h5>
+                        <p class="small text-muted mb-2">${material.category}</p>
+                        <p class="small text-muted">${formatDate(material.uploadDate)}</p>
+                        <a class="btn btn-sm btn-outline-primary" href="${material.filePath}" target="_blank">Open file</a>
+                    </div>
+                `;
+                section.appendChild(card);
+            });
+        })
+        .catch(error => {
+            console.error("Materials Load Error:", error);
+            section.innerHTML = `<p class="text-danger">Could not load materials.</p>`;
+        });
+}
+
+function formatDate(value, long = false) {
+    if (!value) {
+        return "-";
+    }
+
+    return new Date(value).toLocaleDateString("en-US", long
+        ? { month: "long", day: "numeric", year: "numeric" }
+        : { month: "short", day: "numeric", year: "numeric" });
 }

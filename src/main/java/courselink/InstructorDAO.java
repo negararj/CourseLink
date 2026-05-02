@@ -14,22 +14,20 @@ public class InstructorDAO {
     public List<Course> getAllCourses() {
         List<Course> courses = new ArrayList<>();
 
-        try {
-            Connection conn = DBConnection.getConnection();
-
-            String query = "SELECT * FROM courses";
-            PreparedStatement ps = conn.prepareStatement(query);
-            ResultSet rs = ps.executeQuery();
+        String query = "SELECT id, name, instructor, course_code, credits FROM courses ORDER BY name";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query);
+             ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 Course c = new Course();
                 c.setId(rs.getInt("id"));
                 c.setName(rs.getString("name"));
                 c.setInstructor(rs.getString("instructor"));
+                c.setCourseCode(rs.getString("course_code"));
+                c.setCredits(rs.getInt("credits"));
                 courses.add(c);
             }
-
-            conn.close();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -39,16 +37,14 @@ public class InstructorDAO {
     }
 
     public void addCourse(String name, String instructor) {
-        try {
-            Connection conn = DBConnection.getConnection();
+        String query = "INSERT INTO courses (name, instructor) VALUES (?, ?)";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
 
-            String query = "INSERT INTO courses (name, instructor) VALUES (?, ?)";
-            PreparedStatement ps = conn.prepareStatement(query);
             ps.setString(1, name);
             ps.setString(2, instructor);
 
             ps.executeUpdate();
-            conn.close();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -83,31 +79,17 @@ public class InstructorDAO {
 
     public List<Assessment> getAssessmentsByCourse(String courseId) {
         List<Assessment> assessments = new ArrayList<>();
-        String query = "SELECT * FROM Assessments WHERE course_id = ? AND is_published = true ORDER BY exam_date";
+        String query = "SELECT * FROM Assessments WHERE is_published = true AND (? IS NULL OR course_id = ?) ORDER BY exam_date";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(query)) {
 
             ps.setString(1, courseId);
+            ps.setString(2, courseId);
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                Assessment assessment = new Assessment();
-                assessment.setId(rs.getLong("assessment_id"));
-                assessment.setCourseId(rs.getString("course_id"));
-                assessment.setTitle(rs.getString("title"));
-                assessment.setType(rs.getString("assessment_type"));
-                assessment.setWeightPercent(rs.getDouble("weight_percent"));
-
-                Date examDate = rs.getDate("exam_date");
-                if (examDate != null) {
-                    assessment.setExamDate(examDate.toLocalDate());
-                }
-
-                assessment.setTopic(rs.getString("topic"));
-                assessment.setInstructions(rs.getString("instructions"));
-                assessment.setPublished(rs.getBoolean("is_published"));
-                assessments.add(assessment);
+                assessments.add(readAssessment(rs));
             }
 
         } catch (Exception e) {
@@ -123,25 +105,10 @@ public class InstructorDAO {
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(query);
-             ResultSet rs = ps.executeQuery()) {
+            ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                Assessment assessment = new Assessment();
-                assessment.setId(rs.getLong("assessment_id"));
-                assessment.setCourseId(rs.getString("course_id"));
-                assessment.setTitle(rs.getString("title"));
-                assessment.setType(rs.getString("assessment_type"));
-                assessment.setWeightPercent(rs.getDouble("weight_percent"));
-
-                Date examDate = rs.getDate("exam_date");
-                if (examDate != null) {
-                    assessment.setExamDate(examDate.toLocalDate());
-                }
-
-                assessment.setTopic(rs.getString("topic"));
-                assessment.setInstructions(rs.getString("instructions"));
-                assessment.setPublished(rs.getBoolean("is_published"));
-                assessments.add(assessment);
+                assessments.add(readAssessment(rs));
             }
 
         } catch (Exception e) {
@@ -251,5 +218,42 @@ public class InstructorDAO {
         }
 
         return 0;
+    }
+
+    public int getStudentCount() {
+        String query = "SELECT COUNT(*) AS total FROM Users WHERE role = 'student'";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query);
+             ResultSet rs = ps.executeQuery()) {
+
+            if (rs.next()) {
+                return rs.getInt("total");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
+    private Assessment readAssessment(ResultSet rs) throws SQLException {
+        Assessment assessment = new Assessment();
+        assessment.setId(rs.getLong("assessment_id"));
+        assessment.setCourseId(rs.getString("course_id"));
+        assessment.setTitle(rs.getString("title"));
+        assessment.setType(rs.getString("assessment_type"));
+        assessment.setWeightPercent(rs.getDouble("weight_percent"));
+
+        Date examDate = rs.getDate("exam_date");
+        if (examDate != null) {
+            assessment.setExamDate(examDate.toLocalDate());
+        }
+
+        assessment.setTopic(rs.getString("topic"));
+        assessment.setInstructions(rs.getString("instructions"));
+        assessment.setPublished(rs.getBoolean("is_published"));
+        return assessment;
     }
 }

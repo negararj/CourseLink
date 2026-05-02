@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     loadCourses();
+    loadAvailableCourses();
 
     const form = document.getElementById("addCourseForm");
     if (form) {
@@ -25,6 +26,49 @@ function loadCourses() {
             console.error("My Courses Error:", error);
             container.innerHTML = `<p class="text-danger">Could not load your courses.</p>`;
         });
+}
+
+function loadAvailableCourses() {
+    const select = document.getElementById("availableCourse");
+    if (!select) {
+        return;
+    }
+
+    fetch("CourseServlet", {
+        credentials: "same-origin"
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Could not load available courses.");
+            }
+            return response.json();
+        })
+        .then(courses => populateAvailableCourses(courses || []))
+        .catch(error => {
+            console.error("Available Courses Error:", error);
+            select.innerHTML = `<option value="">Could not load courses</option>`;
+        });
+}
+
+function populateAvailableCourses(courses) {
+    const select = document.getElementById("availableCourse");
+    select.innerHTML = "";
+
+    if (courses.length === 0) {
+        select.innerHTML = `<option value="">No instructor courses available</option>`;
+        select.disabled = true;
+        return;
+    }
+
+    select.disabled = false;
+    select.appendChild(new Option("Choose a course", ""));
+
+    courses.forEach(course => {
+        const code = course.courseCode ? course.courseCode + " - " : "";
+        const credits = course.credits || 3;
+        const label = `${code}${course.name} (${course.instructor}, ${credits} credits)`;
+        select.appendChild(new Option(label, course.id));
+    });
 }
 
 function displayCourses(courses) {
@@ -65,10 +109,7 @@ function addCourse(event) {
     const submitButton = form.querySelector("button[type='submit']");
     const params = new URLSearchParams();
 
-    params.append("name", document.getElementById("courseName").value);
-    params.append("instructor", document.getElementById("instructorName").value);
-    params.append("credits", document.getElementById("courseCredits").value);
-    params.append("initialGrade", document.getElementById("initialGrade").value);
+    params.append("courseId", document.getElementById("availableCourse").value);
 
     if (submitButton) {
         submitButton.disabled = true;
@@ -111,7 +152,7 @@ function addCourse(event) {
         .finally(() => {
             if (submitButton) {
                 submitButton.disabled = false;
-                submitButton.textContent = "Add to My Semester";
+                submitButton.textContent = "Register Course";
             }
         });
 }

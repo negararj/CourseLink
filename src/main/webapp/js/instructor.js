@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    populateInstructorCourseSelects();
     
     // ==========================================
     // 1. SYLLABUS ASSESSMENT TABLE LOGIC
@@ -91,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const courseIdInput = uploadForm ? uploadForm.querySelector('input[name="courseId"]') : null;
 
     function selectedCourseId() {
-        return courseSelect ? courseSelect.value : 'CMP120';
+        return courseSelect ? courseSelect.value : '';
     }
 
     function syncSelectedCourse() {
@@ -139,11 +140,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (courseSelect) {
-        syncSelectedCourse();
-        loadInstructorMaterials();
         courseSelect.addEventListener('change', () => {
             syncSelectedCourse();
             loadInstructorMaterials();
+            loadSyllabusAssessments();
         });
     }
 
@@ -190,5 +190,85 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert("Could not connect to the server. Is Tomcat running?");
             });
         });
+    }
+
+    function loadSyllabusAssessments() {
+        const tableBody = document.querySelector('#assessment-table tbody');
+        if (!tableBody || !courseSelect || !courseSelect.value) {
+            return;
+        }
+
+        tableBody.innerHTML = '<tr><td colspan="3" class="text-muted ps-3">Loading assessments...</td></tr>';
+
+        fetch(`AssessmentServlet?course=${encodeURIComponent(courseSelect.value)}`)
+            .then(response => response.json())
+            .then(assessments => {
+                tableBody.innerHTML = '';
+
+                if (!assessments.length) {
+                    tableBody.innerHTML = '<tr><td colspan="3" class="text-muted ps-3">No assessments scheduled for this course yet.</td></tr>';
+                    return;
+                }
+
+                assessments.forEach(assessment => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><input type="text" class="form-control shadow-none" value="${assessment.title || ''}"></td>
+                        <td><input type="number" class="form-control text-center shadow-none" value="${assessment.weightPercent || 0}"></td>
+                        <td class="text-end pe-3"><button class="btn btn-sm text-danger remove-row">Remove</button></td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            })
+            .catch(error => {
+                console.error('Assessment Load Error:', error);
+                tableBody.innerHTML = '<tr><td colspan="3" class="text-danger ps-3">Could not load assessments.</td></tr>';
+            });
+    }
+
+    function populateInstructorCourseSelects() {
+        const selects = document.querySelectorAll('#courseSelect, select[name="courseId"]');
+        if (!selects.length) {
+            return;
+        }
+
+        fetch('CourseServlet')
+            .then(response => response.json())
+            .then(courses => {
+                const params = new URLSearchParams(window.location.search);
+                const requestedCourseId = params.get('courseId') || params.get('course');
+
+                selects.forEach(select => {
+                    select.innerHTML = '';
+
+                    if (!courses.length) {
+                        const option = document.createElement('option');
+                        option.value = '';
+                        option.textContent = 'Create a course first';
+                        select.appendChild(option);
+                        select.disabled = true;
+                        return;
+                    }
+
+                    select.disabled = false;
+                    courses.forEach(course => {
+                        const option = document.createElement('option');
+                        option.value = course.id;
+                        option.textContent = `${course.name} (#${course.id})`;
+                        select.appendChild(option);
+                    });
+
+                    if (requestedCourseId && Array.from(select.options).some(option => option.value === requestedCourseId)) {
+                        select.value = requestedCourseId;
+                    }
+                });
+
+                syncSelectedCourse();
+                loadInstructorMaterials();
+                loadSyllabusAssessments();
+            })
+            .catch(error => {
+                console.error('Course Load Error:', error);
+            });
     }
 });

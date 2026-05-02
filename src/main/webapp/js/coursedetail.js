@@ -18,6 +18,7 @@ function showTab(tabId) {
 const params = new URLSearchParams(window.location.search);
 
 const courseName = params.get("name")?.trim();
+const courseId = params.get("courseId");
 const instructor = params.get("instructor");
 const credits = params.get("credits");
 const grade = params.get("grade");
@@ -137,8 +138,10 @@ if (matchedCourse) {
 // =========================
 const materialsBtn = document.getElementById("materialsBtn");
 
-if (courseName) {
-    materialsBtn.href = `Materials.html?course=${encodeURIComponent(courseName)}`;
+if (courseId || courseName) {
+    materialsBtn.href = courseId
+        ? `Materials.html?courseId=${encodeURIComponent(courseId)}`
+        : `Materials.html?course=${encodeURIComponent(courseName)}`;
     materialsBtn.innerText = `${courseName} Materials`;
 }
 

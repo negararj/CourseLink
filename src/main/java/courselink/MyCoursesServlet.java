@@ -47,18 +47,16 @@ public class MyCoursesServlet extends HttpServlet {
 
         request.setCharacterEncoding("UTF-8");
 
-        String name = trim(request.getParameter("name"));
-        String instructor = trim(request.getParameter("instructor"));
-        int credits = parseCredits(request.getParameter("credits"));
+        int courseId = parseCourseId(request.getParameter("courseId"));
 
-        if (name.isBlank() || instructor.isBlank()) {
-            sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Course name and instructor are required.");
+        if (courseId <= 0) {
+            sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Please choose a course to register.");
             return;
         }
 
-        Course course = dao.registerCourse(userId, name, instructor, credits);
+        Course course = dao.registerCourse(userId, courseId);
         if (course == null) {
-            sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Could not register this course.");
+            sendError(response, HttpServletResponse.SC_NOT_FOUND, "Please choose an existing course created by an instructor.");
             return;
         }
 
@@ -102,12 +100,11 @@ public class MyCoursesServlet extends HttpServlet {
         response.getWriter().print(gson.toJson(payload));
     }
 
-    private int parseCredits(String value) {
+    private int parseCourseId(String value) {
         try {
-            int credits = Integer.parseInt(trim(value));
-            return credits <= 0 ? 3 : credits;
+            return Integer.parseInt(trim(value));
         } catch (NumberFormatException e) {
-            return 3;
+            return 0;
         }
     }
 

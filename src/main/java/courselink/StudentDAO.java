@@ -13,17 +13,16 @@ import java.util.Map;
 
 public class StudentDAO {
 
-    public Course registerCourse(long userId, String name, String instructor, int credits) {
-        String courseCode = courseCodeFrom(name);
-
+    public Course registerCourse(long userId, int courseId) {
         try (Connection conn = DBConnection.getConnection()) {
             ensureStudentSchema(conn);
             conn.setAutoCommit(false);
 
             try {
-                Course course = findCourse(conn, name, instructor);
+                Course course = findCourse(conn, courseId);
                 if (course == null) {
-                    course = createCourse(conn, name, instructor, courseCode, credits);
+                    conn.rollback();
+                    return null;
                 }
 
                 enrollStudent(conn, userId, course.getId());
@@ -122,49 +121,20 @@ public class StudentDAO {
         return alerts;
     }
 
-    private Course findCourse(Connection conn, String name, String instructor) throws Exception {
+    private Course findCourse(Connection conn, int courseId) throws Exception {
         String query = """
                 SELECT id, name, instructor, course_code, credits
                 FROM courses
-                WHERE LOWER(name) = LOWER(?)
-                  AND LOWER(instructor) = LOWER(?)
+                WHERE id = ?
                 LIMIT 1
                 """;
 
         try (PreparedStatement ps = conn.prepareStatement(query)) {
-            ps.setString(1, name);
-            ps.setString(2, instructor);
+            ps.setInt(1, courseId);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return courseFrom(rs);
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private Course createCourse(Connection conn, String name, String instructor, String courseCode, int credits)
-            throws Exception {
-        String query = "INSERT INTO courses (name, instructor, course_code, credits) VALUES (?, ?, ?, ?)";
-
-        try (PreparedStatement ps = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, name);
-            ps.setString(2, instructor);
-            ps.setString(3, courseCode);
-            ps.setInt(4, credits);
-            ps.executeUpdate();
-
-            try (ResultSet keys = ps.getGeneratedKeys()) {
-                if (keys.next()) {
-                    Course course = new Course();
-                    course.setId(keys.getInt(1));
-                    course.setName(name);
-                    course.setInstructor(instructor);
-                    course.setCourseCode(courseCode);
-                    course.setCredits(credits);
-                    return course;
                 }
             }
         }
@@ -210,15 +180,6 @@ public class StudentDAO {
         }
 
         return courseName + " has an upcoming " + type + " on " + topic + ".";
-    }
-
-    private String courseCodeFrom(String name) {
-        String cleaned = name == null ? "" : name.trim().replaceAll("[^A-Za-z0-9]", "");
-        if (cleaned.isBlank()) {
-            return "COURSE";
-        }
-
-        return cleaned.length() > 12 ? cleaned.substring(0, 12).toUpperCase() : cleaned.toUpperCase();
     }
 
     private void ensureStudentSchema(Connection conn) throws Exception {

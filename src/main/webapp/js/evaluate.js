@@ -43,7 +43,7 @@ function renderCourses() {
                     </div>
 
                     <div class="course-actions mt-auto">
-                        <a href="Materials.html?course=${encodeURIComponent(course.name)}"
+                        <a href="Materials.html?courseId=${encodeURIComponent(course.id)}"
                            onclick="event.stopPropagation()"
                            class="btn btn-sm btn-outline-primary flex-grow-1">
                             Materials

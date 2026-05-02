@@ -62,32 +62,18 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header border-0 pb-0">
-                    <h5 class="fw-bold">Add New Course</h5>
+                    <h5 class="fw-bold">Register Course</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="addCourseForm">
                         <div class="mb-3">
-                            <label class="form-label small fw-bold">Course Name</label>
-                            <input type="text" class="form-control" id="courseName"
-                                placeholder="e.g. Intro to Psychology" required>
+                            <label class="form-label small fw-bold">Available Course</label>
+                            <select class="form-select" id="availableCourse" required>
+                                <option value="">Loading courses...</option>
+                            </select>
                         </div>
-                        <div class="row">
-                            <div class="col-md-8 mb-3">
-                                <label class="form-label small fw-bold">Instructor</label>
-                                <input type="text" class="form-control" id="instructorName"
-                                    placeholder="e.g. Dr. Jane Doe" required>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label small fw-bold">Credits</label>
-                                <input type="number" class="form-control" id="courseCredits" placeholder="3" required>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Current Grade / Average (%)</label>
-                            <input type="number" class="form-control" id="initialGrade" placeholder="90">
-                        </div>
-                        <button type="submit" class="btn btn-accent w-100 mt-2 py-2">Add to My Semester</button>
+                        <button type="submit" class="btn btn-accent w-100 mt-2 py-2">Register Course</button>
                     </form>
                 </div>
             </div>

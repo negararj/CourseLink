@@ -4,10 +4,10 @@ import java.time.LocalDateTime;
 
 public class Material {
     private Long id;
-    private String courseId;     // e.g., "CMP120"
-    private String title;        // e.g., "Chapter 1 Summary"
-    private String category;     // e.g., "Lecture Notes"
-    private String filePath;     // Where the file is saved on the server
+    private String courseId;
+    private String title;
+    private String category;
+    private String filePath;
     private LocalDateTime uploadDate;
 
     // Default Constructor

@@ -3,7 +3,7 @@ import java.time.LocalDate;
 
 public class Assessment {
     private Long id;
-    private String courseId;       // e.g., "CMP120"
+    private String courseId;
     private String title;          // e.g., "Midterm Exam"
     private String type;           // e.g., "Exam", "Quiz"
     private double weightPercent;  // e.g., 25.0 (for 25%)

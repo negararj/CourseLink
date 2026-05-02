@@ -25,8 +25,8 @@ public class InstructorDashboardServlet extends HttpServlet {
         List<Assessment> upcomingAssessments = dao.getUpcomingAssessments();
 
         Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("totalStudents", 142);
-        payload.put("avgPerformance", "84%");
+        payload.put("totalStudents", dao.getStudentCount());
+        payload.put("avgPerformance", "-");
         payload.put("activeCourses", courses.size());
         payload.put("totalUploads", dao.getMaterialCount());
         payload.put("courses", courses);

@@ -40,7 +40,6 @@ CREATE TABLE IF NOT EXISTS Users (
     password_hash VARCHAR(255) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-
 CREATE TABLE IF NOT EXISTS Enrollments (
     enrollment_id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
@@ -56,40 +55,41 @@ CREATE TABLE IF NOT EXISTS Enrollments (
         ON DELETE CASCADE
 );
 
-ALTER TABLE courses
-    ADD COLUMN IF NOT EXISTS course_code VARCHAR(40);
-
-ALTER TABLE courses
-    ADD COLUMN IF NOT EXISTS credits INT NOT NULL DEFAULT 3;
-
-INSERT INTO courses (name, instructor)
-SELECT 'Intro to Programming', 'Dr. Smith'
-WHERE NOT EXISTS (
-    SELECT 1 FROM courses WHERE name = 'Intro to Programming'
+SET @course_code_exists = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'courses'
+      AND COLUMN_NAME = 'course_code'
 );
-
-INSERT INTO courses (name, instructor)
-SELECT 'Calculus II', 'Dr. Ahmed'
-WHERE NOT EXISTS (
-    SELECT 1 FROM courses WHERE name = 'Calculus II'
+SET @sql = IF(@course_code_exists = 0,
+    'ALTER TABLE courses ADD COLUMN course_code VARCHAR(40)',
+    'SELECT ''course_code already exists'''
 );
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
-UPDATE courses
-SET course_code = 'CS101', credits = 3
-WHERE name = 'Intro to Programming';
-
-UPDATE courses
-SET course_code = 'MATH202', credits = 4
-WHERE name = 'Calculus II';
-
-INSERT INTO Enrollments (user_id, course_id)
-SELECT u.user_id, c.id
-FROM Users u
-JOIN courses c ON c.name IN ('Intro to Programming', 'Calculus II')
-WHERE u.role = 'student'
-  AND NOT EXISTS (
-      SELECT 1
-      FROM Enrollments e
-      WHERE e.user_id = u.user_id
-        AND e.course_id = c.id
-  );
+DELETE FROM courses
+WHERE id IN (
+    SELECT id FROM (
+        SELECT id
+        FROM courses
+        WHERE (name = 'Intro to Programming' AND instructor = 'Dr. Smith')
+           OR (name = 'Calculus II' AND instructor = 'Dr. Ahmed')
+    ) AS dummy_courses
+);
+SET @credits_exists = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'courses'
+      AND COLUMN_NAME = 'credits'
+);
+SET @sql = IF(@credits_exists = 0,
+    'ALTER TABLE courses ADD COLUMN credits INT NOT NULL DEFAULT 3',
+    'SELECT ''credits already exists'''
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
