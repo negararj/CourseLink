@@ -26,7 +26,7 @@
                 <span class="fw-bold">CourseLink</span>
             </a>
             <div class="ms-auto d-flex align-items-center">
-                <span class="me-3 text-muted d-none d-md-block">Welcome, Instructor</span>
+                <span class="me-3 text-muted d-none d-md-block">Welcome, Dr. Smith</span>
                 <a href="Profile.html" class="user-avatar text-decoration-none">DS</a>
             </div>
         </div>
@@ -73,7 +73,8 @@
                         <div class="mb-3">
                             <label class="form-label small fw-bold">Course</label>
                             <select class="form-select" id="eventCourse">
-                                <option value="">Loading courses...</option>
+                                <option value="CMP120">Intro to Programming</option>
+                                <option value="MTH104">Calculus II</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -111,8 +112,12 @@
         document.addEventListener("DOMContentLoaded", function () {
             const calendarEl = document.getElementById("calendar");
             
-            loadCourseOptions();
-            let instructorEvents = JSON.parse(localStorage.getItem('courseLinkEvents')) || [];
+            // Load existing events from localStorage or use defaults
+            let instructorEvents = JSON.parse(localStorage.getItem('courseLinkEvents')) || [
+                { title: "Intro to Programming: Midterm Exam 1 (25%)", start: "2026-03-25", color: "#1a365d" },
+                { title: "Calculus II: Quiz 3 (15%)", start: "2026-03-30", color: "#ed8936" },
+                { title: "Intro to Programming: Project Due (15%)", start: "2026-04-20", color: "#1a365d" }
+            ];
 
             calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: "dayGridMonth",
@@ -142,7 +147,7 @@
                 const newEvent = {
                     title: `${course}: ${title} (${weight}%)`,
                     start: date,
-                    color: '#1a365d',
+                    color: course === 'Calculus II' ? '#ed8936' : '#1a365d',
                     extendedProps: {
                         topic: topic,
                         published: isPublished
@@ -186,34 +191,6 @@
                 });
             });
         });
-
-        function loadCourseOptions() {
-            const select = document.getElementById('eventCourse');
-
-            fetch('api/courses')
-                .then(response => response.json())
-                .then(courses => {
-                    select.innerHTML = '';
-
-                    if (!courses.length) {
-                        select.innerHTML = '<option value="">Create a course first</option>';
-                        select.disabled = true;
-                        return;
-                    }
-
-                    courses.forEach(course => {
-                        const option = document.createElement('option');
-                        option.value = course.code;
-                        option.textContent = `${course.name} (${course.code})`;
-                        select.appendChild(option);
-                    });
-                })
-                .catch(error => {
-                    console.error('Course Options Error:', error);
-                    select.innerHTML = '<option value="">Could not load courses</option>';
-                    select.disabled = true;
-                });
-        }
     </script>
     <script src="js/current_user.js"></script>
 </body>

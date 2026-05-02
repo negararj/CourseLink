@@ -22,7 +22,7 @@
                 <span class="fw-bold">CourseLink</span>
             </a>
             <div class="ms-auto d-flex align-items-center">
-                <span class="me-3 text-muted d-none d-md-block">Welcome, Instructor</span>
+                <span class="me-3 text-muted d-none d-md-block">Welcome, Dr. Smith</span>
                 <a href="Profile.html" class="user-avatar text-decoration-none">DS</a>
             </div>
         </div>
@@ -126,8 +126,9 @@
                     <form id="uploadForm">
                         <div class="mb-3">
                             <label class="form-label small fw-bold">Select Course</label>
-                            <select class="form-select instructor-course-select" name="courseId" required>
-                                <option value="">Loading courses...</option>
+                            <select class="form-select" name="courseId" required>
+                                <option value="CMP120">Intro to Programming (CMP120)</option>
+                                <option value="MTH104">Calculus II (MTH104)</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -165,8 +166,9 @@
                     <form id="examForm">
                         <div class="mb-3">
                             <label class="form-label small fw-bold">Course</label>
-                            <select class="form-select instructor-course-select" id="examCourse" name="courseId" required>
-                                <option value="">Loading courses...</option>
+                            <select class="form-select" id="examCourse" name="courseId" required>
+                                <option value="CMP120">Intro to Programming (CMP120)</option>
+                                <option value="MTH104">Calculus II (MTH104)</option>
                             </select>
                         </div>
                         <div class="mb-3">

@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    loadInstructorCourseSelects();
     
     // ==========================================
     // 1. SYLLABUS ASSESSMENT TABLE LOGIC
@@ -92,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const courseIdInput = uploadForm ? uploadForm.querySelector('input[name="courseId"]') : null;
 
     function selectedCourseId() {
-        return courseSelect ? courseSelect.value : '';
+        return courseSelect ? courseSelect.value : 'CMP120';
     }
 
     function syncSelectedCourse() {
@@ -140,6 +139,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (courseSelect) {
+        syncSelectedCourse();
+        loadInstructorMaterials();
         courseSelect.addEventListener('change', () => {
             syncSelectedCourse();
             loadInstructorMaterials();
@@ -191,46 +192,3 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
-
-function loadInstructorCourseSelects() {
-    const selects = document.querySelectorAll('.instructor-course-select');
-    if (!selects.length) {
-        return;
-    }
-
-    const requestedCourse = new URLSearchParams(window.location.search).get('course');
-
-    fetch('api/courses')
-        .then(response => response.json())
-        .then(courses => {
-            selects.forEach(select => {
-                select.innerHTML = '';
-
-                if (!courses.length) {
-                    select.innerHTML = '<option value="">Create a course first</option>';
-                    select.disabled = true;
-                    return;
-                }
-
-                courses.forEach(course => {
-                    const option = document.createElement('option');
-                    option.value = course.code;
-                    option.textContent = `${course.name} (${course.code})`;
-                    select.appendChild(option);
-                });
-
-                if (requestedCourse) {
-                    select.value = requestedCourse;
-                }
-
-                select.dispatchEvent(new Event('change'));
-            });
-        })
-        .catch(error => {
-            console.error('Course Options Error:', error);
-            selects.forEach(select => {
-                select.innerHTML = '<option value="">Could not load courses</option>';
-                select.disabled = true;
-            });
-        });
-}

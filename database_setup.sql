@@ -3,21 +3,9 @@ USE courselink;
 
 CREATE TABLE IF NOT EXISTS courses (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    course_code VARCHAR(40) NOT NULL UNIQUE,
     name VARCHAR(120) NOT NULL,
     instructor VARCHAR(120) NOT NULL
 );
-
-ALTER TABLE courses
-ADD COLUMN IF NOT EXISTS course_code VARCHAR(40) NULL AFTER id;
-
-DELETE FROM courses
-WHERE (name = 'Intro to Programming' AND instructor = 'Dr. Smith')
-   OR (name = 'Calculus II' AND instructor = 'Dr. Ahmed');
-
-UPDATE courses
-SET course_code = CONCAT('COURSE', id)
-WHERE course_code IS NULL OR course_code = '';
 
 CREATE TABLE IF NOT EXISTS Assessments (
     assessment_id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -49,4 +37,16 @@ CREATE TABLE IF NOT EXISTS Users (
     role ENUM('student', 'instructor') NOT NULL DEFAULT 'student',
     password_hash VARCHAR(255) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO courses (name, instructor)
+SELECT 'Intro to Programming', 'Dr. Smith'
+WHERE NOT EXISTS (
+    SELECT 1 FROM courses WHERE name = 'Intro to Programming'
+);
+
+INSERT INTO courses (name, instructor)
+SELECT 'Calculus II', 'Dr. Ahmed'
+WHERE NOT EXISTS (
+    SELECT 1 FROM courses WHERE name = 'Calculus II'
 );

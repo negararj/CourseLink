@@ -1,6 +1,5 @@
 ﻿document.addEventListener('DOMContentLoaded', () => {
     loadInstructorDashboard();
-    loadCourseOptions();
     setupUploadForm();
     setupExamForm();
 });
@@ -42,7 +41,7 @@ function renderCourses(courses) {
     }
 
     courses.forEach((course, index) => {
-        const code = course.code || `COURSE${course.id || index + 1}`;
+        const code = courseCode(course.name, index);
         coursesList.innerHTML += `
             <div class="course-entry shadow-sm mb-3">
                 <div class="feature-icon ${index % 2 === 0 ? 'one' : 'two'} me-4" style="width:55px; height:55px; font-size:1rem;">
@@ -53,7 +52,7 @@ function renderCourses(courses) {
                     <p class="text-muted small mb-0">${code} | ${course.instructor}</p>
                 </div>
                 <div class="d-flex gap-2">
-                    <a href="InstructorSyllabus.html?course=${encodeURIComponent(code)}" class="btn btn-outline-primary btn-sm rounded-pill px-3">Syllabus</a>
+                    <a href="InstructorSyllabus.html?course=${encodeURIComponent(course.name)}" class="btn btn-outline-primary btn-sm rounded-pill px-3">Syllabus</a>
                     <a href="InstructorMaterials.html?course=${encodeURIComponent(code)}" class="btn btn-primary btn-sm rounded-pill px-3">Manage</a>
                 </div>
             </div>
@@ -81,41 +80,6 @@ function renderUploads(uploads) {
             </div>
         `;
     });
-}
-
-function loadCourseOptions() {
-    const selects = document.querySelectorAll('.instructor-course-select');
-    if (!selects.length) {
-        return;
-    }
-
-    fetch('api/courses')
-        .then(response => response.json())
-        .then(courses => {
-            selects.forEach(select => {
-                select.innerHTML = '';
-
-                if (!courses.length) {
-                    select.innerHTML = '<option value="">Create a course first</option>';
-                    select.disabled = true;
-                    return;
-                }
-
-                courses.forEach(course => {
-                    const option = document.createElement('option');
-                    option.value = course.code;
-                    option.textContent = `${course.name} (${course.code})`;
-                    select.appendChild(option);
-                });
-            });
-        })
-        .catch(error => {
-            console.error('Course Options Error:', error);
-            selects.forEach(select => {
-                select.innerHTML = '<option value="">Could not load courses</option>';
-                select.disabled = true;
-            });
-        });
 }
 
 function renderExams(exams) {
@@ -219,4 +183,16 @@ function formatDate(value) {
         day: 'numeric',
         year: 'numeric'
     });
+}
+
+function courseCode(name, index) {
+    if (name === 'Intro to Programming') {
+        return 'CMP120';
+    }
+
+    if (name === 'Calculus II') {
+        return 'MTH104';
+    }
+
+    return `COURSE${index + 1}`;
 }
