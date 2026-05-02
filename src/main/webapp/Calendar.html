@@ -87,63 +87,12 @@
             }
 
             // =========================
-            // SYLLABUS DATA
-            // =========================
-            const allAssessments = {
-                "Intro to Programming": [
-                    { title: "Quiz 1", date: "2026-02-24", weight: 10 },
-                    { title: "Quiz 2", date: "2026-03-10", weight: 10 },
-                    { title: "Midterm Exam", date: "2026-03-25", weight: 25 },
-                    { title: "Homework", date: "2026-04-05", weight: 10 },
-                    { title: "Project", date: "2026-04-20", weight: 15 },
-                    { title: "Final Exam", date: "2026-05-15", weight: 30 }
-                ],
-                "Calculus II": [
-                    { title: "Quiz", date: "2026-02-24", weight: 15 },
-                    { title: "Midterm", date: "2026-03-20", weight: 35 },
-                    { title: "Final Exam", date: "2026-05-10", weight: 50 }
-                ]
-            };
-
-            // =========================
-            // BUILD EVENTS
-            // =========================
-            let events = [];
-
-            // Add hardcoded syllabus data
-            if (courseName && allAssessments[courseName]) {
-                events = allAssessments[courseName].map(item => ({
-                    title: `${item.title} (${item.weight}%)`,
-                    start: item.date
-                }));
-            } else {
-                Object.keys(allAssessments).forEach(course => {
-                    allAssessments[course].forEach(item => {
-                        events.push({
-                            title: `${course}: ${item.title} (${item.weight}%)`,
-                            start: item.date
-                        });
-                    });
-                });
-            }
-
-            // =========================
-            // LOAD INSTRUCTOR EVENTS
-            // =========================
-            const instructorEvents = JSON.parse(localStorage.getItem('courseLinkEvents')) || [];
-            instructorEvents.forEach(evt => {
-                // Only show published events for the student, or specific course
-                if (evt.extendedProps && evt.extendedProps.published) {
-                    if (!courseName || evt.title.includes(courseName)) {
-                        events.push(evt);
-                    }
-                }
-            });
-
-            // =========================
             // INIT CALENDAR
             // =========================
             const calendarEl = document.getElementById("calendar");
+            const eventUrl = courseName
+                ? `CalendarServlet?course=${encodeURIComponent(courseName)}`
+                : "CalendarServlet";
 
             const calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: "dayGridMonth",
@@ -154,10 +103,14 @@
                     right: ""
                 },
 
-                events: events,
+                events: eventUrl,
 
                 eventClick: function (info) {
                     alert(info.event.title);
+                },
+
+                eventSourceFailure: function () {
+                    alert("Could not load calendar events from the database.");
                 },
 
                 height: "auto"
