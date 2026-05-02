@@ -33,40 +33,43 @@ public class GradeTrackerServlet extends HttpServlet {
             return;
         }
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(gradeQuery())) {
+        try (Connection conn = DBConnection.getConnection()) {
+            ensureGradesTable(conn);
 
             String trimmedCourse = course.trim();
-            ps.setLong(1, studentId == null ? -1L : studentId);
-            ps.setString(2, trimmedCourse);
-            ps.setString(3, courseIdForName(trimmedCourse));
-            ps.setString(4, courseCodeForName(trimmedCourse));
-
-            ResultSet rs = ps.executeQuery();
             List<Map<String, Object>> assessments = new ArrayList<>();
             double earnedPercent = 0.0;
             double gradedWeight = 0.0;
             double totalWeight = 0.0;
 
-            while (rs.next()) {
-                double weight = rs.getDouble("weight_percent");
-                Double score = nullableDouble(rs, "score_percent");
+            try (PreparedStatement ps = conn.prepareStatement(gradeQuery())) {
+                ps.setLong(1, studentId == null ? -1L : studentId);
+                ps.setString(2, trimmedCourse);
+                ps.setString(3, trimmedCourse);
+                ps.setString(4, trimmedCourse);
+                ps.setString(5, trimmedCourse);
 
-                totalWeight += weight;
-                if (score != null) {
-                    earnedPercent += score * weight / 100.0;
-                    gradedWeight += weight;
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    double weight = rs.getDouble("weight_percent");
+                    Double score = nullableDouble(rs, "score_percent");
+
+                    totalWeight += weight;
+                    if (score != null) {
+                        earnedPercent += score * weight / 100.0;
+                        gradedWeight += weight;
+                    }
+
+                    Map<String, Object> item = new LinkedHashMap<>();
+                    item.put("id", rs.getLong("assessment_id"));
+                    item.put("courseId", rs.getString("course_id"));
+                    item.put("title", rs.getString("title"));
+                    item.put("type", rs.getString("assessment_type"));
+                    item.put("weightPercent", weight);
+                    item.put("date", rs.getString("exam_date"));
+                    item.put("scorePercent", score);
+                    assessments.add(item);
                 }
-
-                Map<String, Object> item = new LinkedHashMap<>();
-                item.put("id", rs.getLong("assessment_id"));
-                item.put("courseId", rs.getString("course_id"));
-                item.put("title", rs.getString("title"));
-                item.put("type", rs.getString("assessment_type"));
-                item.put("weightPercent", weight);
-                item.put("date", rs.getString("exam_date"));
-                item.put("scorePercent", score);
-                assessments.add(item);
             }
 
             double remainingWeight = Math.max(0.0, totalWeight - gradedWeight);
@@ -100,25 +103,30 @@ public class GradeTrackerServlet extends HttpServlet {
                 "a.weight_percent, a.exam_date, g.score_percent " +
                 "FROM Assessments a " +
                 "LEFT JOIN Grades g ON g.assessment_id = a.assessment_id AND g.student_id = ? " +
+                "LEFT JOIN courses c ON CAST(c.id AS CHAR) = a.course_id " +
+                "OR c.course_code = a.course_id " +
+                "OR c.name = a.course_id " +
                 "WHERE a.is_published = true " +
-                "AND (a.course_id = ? OR a.course_id = (" +
-                "SELECT CAST(c.id AS CHAR) FROM courses c WHERE c.name = ? LIMIT 1" +
-                ") OR a.course_id = ?) " +
+                "AND (a.course_id = ? OR c.name = ? OR c.course_code = ? OR CAST(c.id AS CHAR) = ?) " +
                 "ORDER BY a.exam_date, a.assessment_id";
     }
 
-    private String courseIdForName(String course) {
-        return course;
-    }
+    private void ensureGradesTable(Connection conn) throws Exception {
+        String sql = "CREATE TABLE IF NOT EXISTS Grades (" +
+                "grade_id BIGINT AUTO_INCREMENT PRIMARY KEY, " +
+                "student_id BIGINT NOT NULL, " +
+                "assessment_id BIGINT NOT NULL, " +
+                "score_percent DECIMAL(5,2) NOT NULL, " +
+                "graded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
+                "CONSTRAINT fk_grades_student FOREIGN KEY (student_id) REFERENCES Users(user_id) ON DELETE CASCADE, " +
+                "CONSTRAINT fk_grades_assessment FOREIGN KEY (assessment_id) REFERENCES Assessments(assessment_id) ON DELETE CASCADE, " +
+                "CONSTRAINT uq_grades_student_assessment UNIQUE (student_id, assessment_id), " +
+                "CONSTRAINT chk_grades_score CHECK (score_percent >= 0 AND score_percent <= 100)" +
+                ")";
 
-    private String courseCodeForName(String course) {
-        if ("Intro to Programming".equalsIgnoreCase(course)) {
-            return "CMP120";
+        try (java.sql.Statement statement = conn.createStatement()) {
+            statement.execute(sql);
         }
-        if ("Calculus II".equalsIgnoreCase(course)) {
-            return "MTH104";
-        }
-        return course;
     }
 
     private Long getStudentId(HttpSession session) {

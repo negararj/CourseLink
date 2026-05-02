@@ -32,7 +32,8 @@ public class CalendarServlet extends HttpServlet {
                 String trimmedCourse = course.trim();
                 ps.setString(1, trimmedCourse);
                 ps.setString(2, trimmedCourse);
-                ps.setString(3, courseCodeForName(trimmedCourse));
+                ps.setString(3, trimmedCourse);
+                ps.setString(4, courseCodeForName(trimmedCourse));
             }
 
             ResultSet rs = ps.executeQuery();
@@ -40,9 +41,6 @@ public class CalendarServlet extends HttpServlet {
 
             while (rs.next()) {
                 String courseName = courseNameFromId(rs.getString("course_id"), rs.getString("course_name"));
-                if (courseName == null || courseName.isBlank()) {
-                    courseName = rs.getString("course_id");
-                }
 
                 Map<String, Object> event = new LinkedHashMap<>();
                 event.put("id", rs.getLong("assessment_id"));
@@ -77,11 +75,13 @@ public class CalendarServlet extends HttpServlet {
         String query = "SELECT a.assessment_id, a.course_id, a.title, a.assessment_type, " +
                 "a.weight_percent, a.exam_date, a.topic, a.is_published, c.name AS course_name " +
                 "FROM Assessments a " +
-                "LEFT JOIN courses c ON CAST(c.id AS CHAR) = a.course_id OR c.name = a.course_id " +
+                "LEFT JOIN courses c ON CAST(c.id AS CHAR) = a.course_id " +
+                "OR c.course_code = a.course_id " +
+                "OR c.name = a.course_id " +
                 "WHERE a.is_published = true ";
 
         if (course != null && !course.isBlank()) {
-            query += "AND (a.course_id = ? OR c.name = ? OR a.course_id = ?) ";
+            query += "AND (a.course_id = ? OR CAST(c.id AS CHAR) = ? OR c.name = ? OR c.course_code = ?) ";
         }
 
         return query + "ORDER BY a.exam_date, a.assessment_id";

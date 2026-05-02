@@ -110,4 +110,22 @@
         <servlet-name>AssessmentServlet</servlet-name>
         <url-pattern>/AssessmentServlet</url-pattern>
     </servlet-mapping>
+
+    <servlet>
+        <servlet-name>GradeTrackerServlet</servlet-name>
+        <servlet-class>courselink.GradeTrackerServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>GradeTrackerServlet</servlet-name>
+        <url-pattern>/GradeTrackerServlet</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>CalendarServlet</servlet-name>
+        <servlet-class>courselink.CalendarServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>CalendarServlet</servlet-name>
+        <url-pattern>/CalendarServlet</url-pattern>
+    </servlet-mapping>
 </web-app>
