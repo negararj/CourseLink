@@ -19,8 +19,8 @@ function loadStudentDashboard() {
             return response.json();
         })
         .then(data => {
-            document.getElementById("current-gpa").innerText = data.semGPA || "N/A";
-            document.getElementById("current-cgpa").innerText = data.totalCGPA || "N/A";
+            document.getElementById("current-gpa").innerText = formatPercent(data.averageGrade, data.gradedCredits);
+            document.getElementById("current-cgpa").innerText = formatGpa(data.totalCGPA, data.gradedCredits);
 
             renderDashboardCourses(data.enrolledCourses || []);
             renderAlerts(data.alerts || []);
@@ -108,6 +108,24 @@ function formatAlertDate(value) {
         month: "short",
         day: "numeric"
     });
+}
+
+function formatPercent(value, gradedCredits) {
+    const number = Number(value);
+    if (!Number.isFinite(number) || Number(gradedCredits) === 0) {
+        return "N/A";
+    }
+
+    return `${Number.isInteger(number) ? number : number.toFixed(2)}%`;
+}
+
+function formatGpa(value, gradedCredits) {
+    const number = Number(value);
+    if (!Number.isFinite(number) || Number(gradedCredits) === 0) {
+        return "N/A";
+    }
+
+    return number.toFixed(2);
 }
 
 function escapeHtml(value) {

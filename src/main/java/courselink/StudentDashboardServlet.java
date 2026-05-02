@@ -28,10 +28,13 @@ public class StudentDashboardServlet extends HttpServlet {
 
         List<Course> courses = dao.getEnrolledCourses(userId);
         List<Map<String, Object>> alerts = dao.getUpcomingAlerts(userId);
+        Map<String, Object> gradeSummary = dao.getGradeSummary(userId);
 
         Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("semGPA", "3.82");
-        payload.put("totalCGPA", "3.75");
+        payload.put("averageGrade", gradeSummary.get("averageGrade"));
+        payload.put("semGPA", gradeSummary.get("cgpa"));
+        payload.put("totalCGPA", gradeSummary.get("cgpa"));
+        payload.put("gradedCredits", gradeSummary.get("gradedCredits"));
         payload.put("enrolledCourses", courses);
         payload.put("alerts", alerts);
         payload.put("totalCourses", courses.size());
@@ -54,7 +57,21 @@ public class StudentDashboardServlet extends HttpServlet {
             return null;
         }
 
-        return (Long) session.getAttribute("userId");
+        Object userId = session.getAttribute("userId");
+        if (userId instanceof Number) {
+            return ((Number) userId).longValue();
+        }
+        if (userId instanceof String) {
+            try {
+                return Long.parseLong((String) userId);
+            } catch (NumberFormatException ignored) {
+                sendError(response, HttpServletResponse.SC_UNAUTHORIZED, "Please log in as a student.");
+                return null;
+            }
+        }
+
+        sendError(response, HttpServletResponse.SC_UNAUTHORIZED, "Please log in as a student.");
+        return null;
     }
 
     private void sendError(HttpServletResponse response, int status, String message)

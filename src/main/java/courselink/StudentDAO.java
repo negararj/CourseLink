@@ -121,6 +121,83 @@ public class StudentDAO {
         return alerts;
     }
 
+    public Map<String, Object> getGradeSummary(long userId) {
+        Map<Integer, CourseGrade> courseGrades = new LinkedHashMap<>();
+        String query = """
+                SELECT c.id, c.credits, a.assessment_id, a.weight_percent, g.score_percent
+                FROM Enrollments e
+                JOIN courses c ON c.id = e.course_id
+                LEFT JOIN Assessments a
+                  ON (a.course_id = CAST(c.id AS CHAR)
+                  OR a.course_id = c.course_code
+                  OR a.course_id = c.name)
+                  AND a.is_published = TRUE
+                LEFT JOIN Grades g
+                  ON g.assessment_id = a.assessment_id
+                  AND g.student_id = e.user_id
+                WHERE e.user_id = ?
+                  AND e.status = 'active'
+                ORDER BY c.id, a.assessment_id
+                """;
+
+        try (Connection conn = DBConnection.getConnection()) {
+            ensureStudentSchema(conn);
+
+            try (PreparedStatement ps = conn.prepareStatement(query)) {
+                ps.setLong(1, userId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        int courseId = rs.getInt("id");
+                        CourseGrade courseGrade = courseGrades.get(courseId);
+                        if (courseGrade == null) {
+                            courseGrade = new CourseGrade(rs.getInt("credits"));
+                            courseGrades.put(courseId, courseGrade);
+                        }
+
+                        if (rs.getObject("assessment_id") == null) {
+                            continue;
+                        }
+
+                        double weight = rs.getDouble("weight_percent");
+                        double score = rs.getDouble("score_percent");
+                        if (!rs.wasNull()) {
+                            courseGrade.earnedPercent += score * weight / 100.0;
+                            courseGrade.gradedWeight += weight;
+                        }
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        double weightedPercentTotal = 0.0;
+        double weightedGpaTotal = 0.0;
+        int gradedCredits = 0;
+
+        for (CourseGrade courseGrade : courseGrades.values()) {
+            if (courseGrade.gradedWeight == 0.0) {
+                continue;
+            }
+
+            double courseAverage = courseGrade.earnedPercent / courseGrade.gradedWeight * 100.0;
+            int credits = Math.max(1, courseGrade.credits);
+            weightedPercentTotal += courseAverage * credits;
+            weightedGpaTotal += percentToGpa(courseAverage) * credits;
+            gradedCredits += credits;
+        }
+
+        double averageGrade = gradedCredits == 0 ? 0.0 : weightedPercentTotal / gradedCredits;
+        double cgpa = gradedCredits == 0 ? 0.0 : weightedGpaTotal / gradedCredits;
+
+        Map<String, Object> summary = new LinkedHashMap<>();
+        summary.put("averageGrade", round(averageGrade));
+        summary.put("cgpa", round(cgpa));
+        summary.put("gradedCredits", gradedCredits);
+        return summary;
+    }
+
     private Course findCourse(Connection conn, int courseId) throws Exception {
         String query = """
                 SELECT id, name, instructor, course_code, credits
@@ -208,6 +285,44 @@ public class StudentDAO {
                             ON DELETE CASCADE
                     )
                     """);
+        }
+
+        if (!tableExists(conn, "Grades")) {
+            execute(conn, """
+                    CREATE TABLE Grades (
+                        grade_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                        student_id BIGINT NOT NULL,
+                        assessment_id BIGINT NOT NULL,
+                        score_percent DECIMAL(5,2) NOT NULL,
+                        graded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        CONSTRAINT fk_grades_student
+                            FOREIGN KEY (student_id) REFERENCES Users(user_id)
+                            ON DELETE CASCADE,
+                        CONSTRAINT fk_grades_assessment
+                            FOREIGN KEY (assessment_id) REFERENCES Assessments(assessment_id)
+                            ON DELETE CASCADE,
+                        CONSTRAINT uq_grades_student_assessment UNIQUE (student_id, assessment_id),
+                        CONSTRAINT chk_grades_score CHECK (score_percent >= 0 AND score_percent <= 100)
+                    )
+                    """);
+        }
+    }
+
+    private double percentToGpa(double percent) {
+        return Math.max(0.0, Math.min(4.0, percent / 25.0));
+    }
+
+    private double round(double value) {
+        return Math.round(value * 100.0) / 100.0;
+    }
+
+    private static class CourseGrade {
+        private final int credits;
+        private double earnedPercent;
+        private double gradedWeight;
+
+        private CourseGrade(int credits) {
+            this.credits = credits;
         }
     }
 

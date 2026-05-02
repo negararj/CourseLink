@@ -98,6 +98,51 @@ public class GradeTrackerServlet extends HttpServlet {
         }
     }
 
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
+        Long studentId = getStudentId(request.getSession(false));
+        if (studentId == null) {
+            sendJson(response, HttpServletResponse.SC_UNAUTHORIZED, error("Please log in as a student."));
+            return;
+        }
+
+        String assessmentValue = request.getParameter("assessmentId");
+        String scoreValue = request.getParameter("score");
+
+        if (assessmentValue == null || assessmentValue.isBlank()) {
+            sendJson(response, HttpServletResponse.SC_BAD_REQUEST, error("Missing assessment id."));
+            return;
+        }
+
+        try (Connection conn = DBConnection.getConnection()) {
+            ensureGradesTable(conn);
+            long assessmentId = Long.parseLong(assessmentValue);
+
+            if (scoreValue == null || scoreValue.isBlank()) {
+                deleteGrade(conn, studentId, assessmentId);
+            } else {
+                double score = Double.parseDouble(scoreValue);
+                if (score < 0 || score > 100) {
+                    sendJson(response, HttpServletResponse.SC_BAD_REQUEST, error("Score must be between 0 and 100."));
+                    return;
+                }
+                saveGrade(conn, studentId, assessmentId, score);
+            }
+
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("success", true);
+            sendJson(response, HttpServletResponse.SC_OK, payload);
+
+        } catch (NumberFormatException e) {
+            sendJson(response, HttpServletResponse.SC_BAD_REQUEST, error("Invalid grade value."));
+        } catch (Exception e) {
+            e.printStackTrace();
+            sendJson(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, error("Could not save grade."));
+        }
+    }
+
     private String gradeQuery() {
         return "SELECT a.assessment_id, a.course_id, a.title, a.assessment_type, " +
                 "a.weight_percent, a.exam_date, g.score_percent " +
@@ -126,6 +171,29 @@ public class GradeTrackerServlet extends HttpServlet {
 
         try (java.sql.Statement statement = conn.createStatement()) {
             statement.execute(sql);
+        }
+    }
+
+    private void saveGrade(Connection conn, long studentId, long assessmentId, double score) throws Exception {
+        String sql = "INSERT INTO Grades (student_id, assessment_id, score_percent) " +
+                "VALUES (?, ?, ?) " +
+                "ON DUPLICATE KEY UPDATE score_percent = VALUES(score_percent), graded_at = CURRENT_TIMESTAMP";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, studentId);
+            ps.setLong(2, assessmentId);
+            ps.setDouble(3, score);
+            ps.executeUpdate();
+        }
+    }
+
+    private void deleteGrade(Connection conn, long studentId, long assessmentId) throws Exception {
+        String sql = "DELETE FROM Grades WHERE student_id = ? AND assessment_id = ?";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, studentId);
+            ps.setLong(2, assessmentId);
+            ps.executeUpdate();
         }
     }
 

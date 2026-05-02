@@ -4,6 +4,7 @@ const courseName = params.get("name");
 const gradeTableBody = document.getElementById("gradeTable");
 const targetGradeSelect = document.getElementById("targetGrade");
 let gradeData = null;
+let saveTimer = null;
 
 if (courseName) {
     document.getElementById("courseTitle").innerText = courseName;
@@ -63,17 +64,80 @@ function renderGrades(data) {
 
     data.assessments.forEach(assessment => {
         const score = assessment.scorePercent === null || assessment.scorePercent === undefined
-            ? "Not graded"
-            : `${formatNumber(assessment.scorePercent)}%`;
+            ? ""
+            : formatNumber(assessment.scorePercent);
 
         gradeTableBody.innerHTML += `
             <tr>
                 <td>${escapeHtml(assessment.title)}</td>
                 <td>${formatNumber(assessment.weightPercent)}%</td>
-                <td>${score}</td>
+                <td>
+                    <input type="number"
+                           class="form-control grade-input"
+                           min="0"
+                           max="100"
+                           step="0.01"
+                           data-assessment-id="${assessment.id}"
+                           value="${score}"
+                           placeholder="Not graded">
+                </td>
             </tr>
         `;
     });
+
+    document.querySelectorAll(".grade-input").forEach(input => {
+        input.addEventListener("input", function () {
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(() => saveGrade(this), 450);
+        });
+
+        input.addEventListener("change", function () {
+            clearTimeout(saveTimer);
+            saveGrade(this);
+        });
+    });
+}
+
+function saveGrade(input) {
+    const score = input.value.trim();
+    const numericScore = score === "" ? null : Number(score);
+
+    if (numericScore !== null && (!Number.isFinite(numericScore) || numericScore < 0 || numericScore > 100)) {
+        input.classList.add("is-invalid");
+        return;
+    }
+
+    input.classList.remove("is-invalid");
+    input.disabled = true;
+
+    const body = new URLSearchParams();
+    body.append("assessmentId", input.dataset.assessmentId);
+    body.append("score", score);
+
+    fetch("GradeTrackerServlet", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: body.toString()
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Could not save grade.");
+            }
+            return response.json();
+        })
+        .then(loadGrades)
+        .catch(error => {
+            console.error("Grade Save Error:", error);
+            input.classList.add("is-invalid");
+            alert("Could not save this grade.");
+        })
+        .finally(() => {
+            input.disabled = false;
+            input.focus();
+        });
 }
 
 function renderSummary(data) {
