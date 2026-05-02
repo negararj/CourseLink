@@ -60,7 +60,7 @@ This panel helps students study more efficiently and know how much effort they n
 ---
 
 ## Current Project Structure
-- `Home.html` — Landing / main page with navbar  
+- `index.html` — Landing / main page with navbar  
 - `Login.html` — Login (student/instructor)  
 - `Evaluate.html` — Grade tracking / “how much can I lose”  
 - `Database.html` — Data view (e.g. Class Notes, YouTube links)  

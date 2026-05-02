@@ -101,11 +101,11 @@ body {
     align-items: center; 
     justify-content: center; 
     padding: 2rem;
-    /* This matches the dark blue professional theme from your Home.html */
+    /* This matches the dark blue professional theme from your index.html */
     background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%);
 }
 
-/* Global Navbar Styling (Matches Home.html) */
+/* Global Navbar Styling (Matches index.html) */
 .navbar {
     border-bottom: 1px solid rgba(0,0,0,0.05);
     background-color: #ffffff !important;
