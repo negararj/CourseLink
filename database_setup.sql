@@ -39,6 +39,22 @@ CREATE TABLE IF NOT EXISTS Users (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS Grades (
+    grade_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    student_id BIGINT NOT NULL,
+    assessment_id BIGINT NOT NULL,
+    score_percent DECIMAL(5,2) NOT NULL,
+    graded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_grades_student
+        FOREIGN KEY (student_id) REFERENCES Users(user_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_grades_assessment
+        FOREIGN KEY (assessment_id) REFERENCES Assessments(assessment_id)
+        ON DELETE CASCADE,
+    CONSTRAINT uq_grades_student_assessment UNIQUE (student_id, assessment_id),
+    CONSTRAINT chk_grades_score CHECK (score_percent >= 0 AND score_percent <= 100)
+);
+
 INSERT INTO courses (name, instructor)
 SELECT 'Intro to Programming', 'Dr. Smith'
 WHERE NOT EXISTS (
