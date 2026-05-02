@@ -36,6 +36,39 @@ public class MyCoursesServlet extends HttpServlet {
         sendJson(response, HttpServletResponse.SC_OK, payload);
     }
 
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
+        Long userId = studentUserId(request, response);
+        if (userId == null) {
+            return;
+        }
+
+        request.setCharacterEncoding("UTF-8");
+
+        String name = trim(request.getParameter("name"));
+        String instructor = trim(request.getParameter("instructor"));
+        int credits = parseCredits(request.getParameter("credits"));
+
+        if (name.isBlank() || instructor.isBlank()) {
+            sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Course name and instructor are required.");
+            return;
+        }
+
+        Course course = dao.registerCourse(userId, name, instructor, credits);
+        if (course == null) {
+            sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Could not register this course.");
+            return;
+        }
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("success", true);
+        payload.put("course", course);
+
+        sendJson(response, HttpServletResponse.SC_OK, payload);
+    }
+
     private Long studentUserId(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         HttpSession session = request.getSession(false);
@@ -67,5 +100,18 @@ public class MyCoursesServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.getWriter().print(gson.toJson(payload));
+    }
+
+    private int parseCredits(String value) {
+        try {
+            int credits = Integer.parseInt(trim(value));
+            return credits <= 0 ? 3 : credits;
+        } catch (NumberFormatException e) {
+            return 3;
+        }
+    }
+
+    private String trim(String value) {
+        return value == null ? "" : value.trim();
     }
 }

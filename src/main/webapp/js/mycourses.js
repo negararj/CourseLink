@@ -3,10 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const form = document.getElementById("addCourseForm");
     if (form) {
-        form.addEventListener("submit", event => {
-            event.preventDefault();
-            loadCourses();
-        });
+        form.addEventListener("submit", addCourse);
     }
 });
 
@@ -59,6 +56,60 @@ function displayCourses(courses) {
         `;
         container.appendChild(card);
     });
+}
+
+function addCourse(event) {
+    event.preventDefault();
+
+    const form = document.getElementById("addCourseForm");
+    const submitButton = form.querySelector("button[type='submit']");
+    const params = new URLSearchParams();
+
+    params.append("name", document.getElementById("courseName").value);
+    params.append("instructor", document.getElementById("instructorName").value);
+    params.append("credits", document.getElementById("courseCredits").value);
+    params.append("initialGrade", document.getElementById("initialGrade").value);
+
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = "Adding...";
+    }
+
+    fetch("api/my-courses", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: params.toString()
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Could not register course.");
+            }
+            return response.json();
+        })
+        .then(() => {
+            form.reset();
+
+            const modalElement = document.getElementById("addCourseModal");
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) {
+                modal.hide();
+            }
+
+            loadCourses();
+        })
+        .catch(error => {
+            console.error("Register Course Error:", error);
+            alert("Could not register this course. Please make sure you are logged in as a student and the database setup SQL has been run.");
+        })
+        .finally(() => {
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = "Add to My Semester";
+            }
+        });
 }
 
 function escapeHtml(value) {
