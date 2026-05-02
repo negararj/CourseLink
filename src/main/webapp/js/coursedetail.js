@@ -27,6 +27,7 @@ function loadCourseDetail() {
     if (!requestedCourse) {
         showCourseFallback();
         renderAssessmentError("Open this page from My Courses to see assessment details.");
+        renderClassmatesError("Open this page from My Courses to see classmates.");
         return;
     }
 
@@ -43,6 +44,7 @@ function loadCourseDetail() {
             if (!selectedCourse) {
                 showCourseFallback();
                 renderAssessmentError("This course could not be found.");
+                renderClassmatesError("This course could not be found.");
                 return;
             }
 
@@ -50,11 +52,13 @@ function loadCourseDetail() {
             renderCourseLists(selectedCourse);
             loadAssessments(selectedCourse);
             loadCourseAverage(selectedCourse);
+            loadClassmates(selectedCourse);
         })
         .catch(error => {
             console.error("Course Detail Error:", error);
             showCourseFallback();
             renderAssessmentError("Could not load this course from the database.");
+            renderClassmatesError("Could not load classmates.");
         });
 }
 
@@ -171,6 +175,57 @@ function loadCourseAverage(course) {
         .catch(error => {
             console.error("Course Average Error:", error);
         });
+}
+
+function loadClassmates(course) {
+    const container = document.getElementById("classmatesContainer");
+    container.innerHTML = `<p class="text-muted">Loading classmates...</p>`;
+
+    fetch(`api/course-classmates?courseId=${encodeURIComponent(course.id)}`, { credentials: "same-origin" })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Could not load classmates.");
+            }
+            return response.json();
+        })
+        .then(data => {
+            renderClassmates(data.classmates || []);
+        })
+        .catch(error => {
+            console.error("Classmates Load Error:", error);
+            renderClassmatesError("Could not load classmates for this course.");
+        });
+}
+
+function renderClassmates(classmates) {
+    const container = document.getElementById("classmatesContainer");
+    container.innerHTML = "";
+
+    if (!classmates.length) {
+        container.innerHTML = `<p class="text-muted">No classmates are enrolled in this course yet.</p>`;
+        return;
+    }
+
+    classmates.forEach(classmate => {
+        const name = classmate.fullName || `${classmate.firstName || ""} ${classmate.lastName || ""}`.trim() || "Classmate";
+        container.innerHTML += `
+            <div class="card p-3 mb-2 d-flex flex-row justify-content-between align-items-center">
+                <div>
+                    <span class="fw-semibold">${escapeHtml(name)}</span>
+                    ${classmate.major ? `<div class="small text-muted">${escapeHtml(classmate.major)}</div>` : ""}
+                </div>
+                <a href="Chat.html?user=${encodeURIComponent(name)}" class="text-decoration-none fs-5" aria-label="Message ${escapeHtml(name)}">
+                    <i class="bi bi-envelope-fill"></i>
+                </a>
+            </div>
+        `;
+    });
+}
+
+function renderClassmatesError(message) {
+    document.getElementById("classmatesContainer").innerHTML = `
+        <p class="text-danger">${escapeHtml(message)}</p>
+    `;
 }
 
 function renderAssessmentBreakdown(assessments) {

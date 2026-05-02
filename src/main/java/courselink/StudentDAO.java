@@ -198,6 +198,46 @@ public class StudentDAO {
         return summary;
     }
 
+    public List<Map<String, Object>> getClassmates(long userId, int courseId) {
+        List<Map<String, Object>> classmates = new ArrayList<>();
+        String query = """
+                SELECT u.user_id, u.first_name, u.last_name, u.email, u.major
+                FROM Enrollments e
+                JOIN Users u ON u.user_id = e.user_id
+                WHERE e.course_id = ?
+                  AND e.status = 'active'
+                  AND u.role = 'student'
+                  AND u.user_id <> ?
+                ORDER BY u.first_name, u.last_name
+                """;
+
+        try (Connection conn = DBConnection.getConnection()) {
+            ensureStudentSchema(conn);
+
+            try (PreparedStatement ps = conn.prepareStatement(query)) {
+                ps.setInt(1, courseId);
+                ps.setLong(2, userId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        Map<String, Object> classmate = new LinkedHashMap<>();
+                        classmate.put("id", rs.getLong("user_id"));
+                        classmate.put("firstName", rs.getString("first_name"));
+                        classmate.put("lastName", rs.getString("last_name"));
+                        classmate.put("fullName", fullName(rs));
+                        classmate.put("email", rs.getString("email"));
+                        classmate.put("major", rs.getString("major"));
+                        classmates.add(classmate);
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return classmates;
+    }
+
     private Course findCourse(Connection conn, int courseId) throws Exception {
         String query = """
                 SELECT id, name, instructor, course_code, credits
@@ -257,6 +297,12 @@ public class StudentDAO {
         }
 
         return courseName + " has an upcoming " + type + " on " + topic + ".";
+    }
+
+    private String fullName(ResultSet rs) throws Exception {
+        String firstName = rs.getString("first_name");
+        String lastName = rs.getString("last_name");
+        return ((firstName == null ? "" : firstName) + " " + (lastName == null ? "" : lastName)).trim();
     }
 
     private void ensureStudentSchema(Connection conn) throws Exception {
