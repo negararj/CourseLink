@@ -4,7 +4,9 @@ USE courselink;
 CREATE TABLE IF NOT EXISTS courses (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(120) NOT NULL,
-    instructor VARCHAR(120) NOT NULL
+    instructor VARCHAR(120) NOT NULL,
+    course_code VARCHAR(40),
+    credits INT NOT NULL DEFAULT 3
 );
 
 CREATE TABLE IF NOT EXISTS Assessments (
@@ -39,6 +41,27 @@ CREATE TABLE IF NOT EXISTS Users (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS Enrollments (
+    enrollment_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    course_id INT NOT NULL,
+    enrolled_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('active', 'completed', 'dropped') NOT NULL DEFAULT 'active',
+    UNIQUE KEY unique_student_course (user_id, course_id),
+    CONSTRAINT fk_enrollments_user
+        FOREIGN KEY (user_id) REFERENCES Users(user_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_enrollments_course
+        FOREIGN KEY (course_id) REFERENCES courses(id)
+        ON DELETE CASCADE
+);
+
+ALTER TABLE courses
+    ADD COLUMN IF NOT EXISTS course_code VARCHAR(40);
+
+ALTER TABLE courses
+    ADD COLUMN IF NOT EXISTS credits INT NOT NULL DEFAULT 3;
+
 INSERT INTO courses (name, instructor)
 SELECT 'Intro to Programming', 'Dr. Smith'
 WHERE NOT EXISTS (
@@ -50,3 +73,23 @@ SELECT 'Calculus II', 'Dr. Ahmed'
 WHERE NOT EXISTS (
     SELECT 1 FROM courses WHERE name = 'Calculus II'
 );
+
+UPDATE courses
+SET course_code = 'CS101', credits = 3
+WHERE name = 'Intro to Programming';
+
+UPDATE courses
+SET course_code = 'MATH202', credits = 4
+WHERE name = 'Calculus II';
+
+INSERT INTO Enrollments (user_id, course_id)
+SELECT u.user_id, c.id
+FROM Users u
+JOIN courses c ON c.name IN ('Intro to Programming', 'Calculus II')
+WHERE u.role = 'student'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM Enrollments e
+      WHERE e.user_id = u.user_id
+        AND e.course_id = c.id
+  );
