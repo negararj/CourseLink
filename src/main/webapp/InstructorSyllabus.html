@@ -65,7 +65,7 @@
                 <span class="fw-bold">CourseLink</span>
             </a>
             <div class="ms-auto d-flex align-items-center">
-                <span class="me-3 text-muted d-none d-md-block small">Dr. Smith (Instructor)</span>
+                <span class="me-3 text-muted d-none d-md-block small">Welcome, Instructor</span>
                 <div class="user-avatar">DS</div>
             </div>
         </div>
@@ -99,9 +99,8 @@
                 <div class="row align-items-center">
                     <div class="col-md-4">
                         <label class="form-label small fw-bold text-muted">Select Course to Manage</label>
-                        <select class="form-select" id="courseSelect">
-                            <option value="CMP120">Intro to Programming (CMP120)</option>
-                            <option value="MTH104">Calculus II (MTH104)</option>
+                        <select class="form-select instructor-course-select" id="courseSelect">
+                            <option value="">Loading courses...</option>
                         </select>
                     </div>
                 </div>
@@ -112,7 +111,7 @@
                     <div class="card p-4 mb-4 border-0 shadow-sm">
                         <h5 class="fw-bold mb-3">Course Overview</h5>
                         <textarea class="form-control bg-light border-0" rows="8"
-                            id="course-overview">This course provides fundamental knowledge and skills required for understanding computer science logic. Students will engage with lectures, assignments, and exams designed to evaluate their progress.</textarea>
+                            id="course-overview" placeholder="Write the course overview students should see."></textarea>
                     </div>
 
                     <div class="card p-4 border-0 shadow-sm">
@@ -127,22 +126,6 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td><input type="text" class="form-control shadow-none" value="Midterm Exam">
-                                        </td>
-                                        <td><input type="number" class="form-control text-center shadow-none"
-                                                value="30"></td>
-                                        <td class="text-end pe-3"><button
-                                                class="btn btn-sm text-danger remove-row">Remove</button></td>
-                                    </tr>
-                                    <tr>
-                                        <td><input type="text" class="form-control shadow-none" value="Final Project">
-                                        </td>
-                                        <td><input type="number" class="form-control text-center shadow-none"
-                                                value="40"></td>
-                                        <td class="text-end pe-3"><button
-                                                class="btn btn-sm text-danger remove-row">Remove</button></td>
-                                    </tr>
                                 </tbody>
                                 <tfoot>
                                     <tr>
@@ -169,27 +152,6 @@
                         </div>
 
                         <div id="grading-scheme-editor">
-                            <div class="d-flex align-items-center mb-2 grade-row">
-                                <input type="text" class="form-control form-control-sm fw-bold me-2" value="A"
-                                    style="width: 45px; text-align: center;">
-                                <input type="text" class="form-control form-control-sm" value="95-100%">
-                                <button class="btn btn-sm text-danger ms-2 remove-grade-row"
-                                    tabindex="-1">&times;</button>
-                            </div>
-                            <div class="d-flex align-items-center mb-2 grade-row">
-                                <input type="text" class="form-control form-control-sm fw-bold me-2" value="B"
-                                    style="width: 45px; text-align: center;">
-                                <input type="text" class="form-control form-control-sm" value="80-84%">
-                                <button class="btn btn-sm text-danger ms-2 remove-grade-row"
-                                    tabindex="-1">&times;</button>
-                            </div>
-                            <div class="d-flex align-items-center mb-2 grade-row">
-                                <input type="text" class="form-control form-control-sm fw-bold me-2" value="F"
-                                    style="width: 45px; text-align: center;">
-                                <input type="text" class="form-control form-control-sm" value="< 60%">
-                                <button class="btn btn-sm text-danger ms-2 remove-grade-row"
-                                    tabindex="-1">&times;</button>
-                            </div>
                         </div>
                         <p class="small text-muted mt-3 mb-0">This scheme updates the "Margin to Goal" calculations for
                             students.</p>

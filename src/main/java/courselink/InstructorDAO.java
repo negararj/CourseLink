@@ -17,13 +17,14 @@ public class InstructorDAO {
         try {
             Connection conn = DBConnection.getConnection();
 
-            String query = "SELECT * FROM courses";
+            String query = "SELECT id, COALESCE(NULLIF(course_code, ''), CONCAT('COURSE', id)) AS course_code, name, instructor FROM courses ORDER BY name";
             PreparedStatement ps = conn.prepareStatement(query);
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
                 Course c = new Course();
                 c.setId(rs.getInt("id"));
+                c.setCode(rs.getString("course_code"));
                 c.setName(rs.getString("name"));
                 c.setInstructor(rs.getString("instructor"));
                 courses.add(c);
@@ -38,14 +39,15 @@ public class InstructorDAO {
         return courses;
     }
 
-    public void addCourse(String name, String instructor) {
+    public void addCourse(String code, String name, String instructor) {
         try {
             Connection conn = DBConnection.getConnection();
 
-            String query = "INSERT INTO courses (name, instructor) VALUES (?, ?)";
+            String query = "INSERT INTO courses (course_code, name, instructor) VALUES (?, ?, ?)";
             PreparedStatement ps = conn.prepareStatement(query);
-            ps.setString(1, name);
-            ps.setString(2, instructor);
+            ps.setString(1, code);
+            ps.setString(2, name);
+            ps.setString(3, instructor);
 
             ps.executeUpdate();
             conn.close();

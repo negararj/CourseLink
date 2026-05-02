@@ -44,9 +44,11 @@ function addCourse(event) {
     event.preventDefault();
 
     const name = document.getElementById("courseName").value;
+    const code = document.getElementById("courseCode").value;
     const instructor = document.getElementById("instructorName").value;
 
     const params = new URLSearchParams();
+    params.append("code", code);
     params.append("name", name);
     params.append("instructor", instructor);
 

@@ -18,7 +18,7 @@
                 <span class="fw-bold">CourseLink</span>
             </a>
             <div class="ms-auto d-flex align-items-center">
-                <span class="me-3 text-muted d-none d-md-block">Welcome, Dr. Smith</span>
+                <span class="me-3 text-muted d-none d-md-block">Welcome, Instructor</span>
                 <a href="Profile.html" class="user-avatar text-decoration-none">DS</a>
             </div>
         </div>
@@ -75,23 +75,41 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const myCourses = [
-            { title: "Intro to Programming", code: "CMP120", students: 85, color: "one" },
-            { title: "Calculus II", code: "MTH104", students: 57, color: "two" }
-        ];
+        let myCourses = [];
+
+        function loadCourses() {
+            fetch('api/courses')
+                .then(response => response.json())
+                .then(courses => {
+                    myCourses = courses;
+                    renderCourses();
+                })
+                .catch(error => {
+                    console.error('Course Load Error:', error);
+                    document.getElementById('instructor-courses-grid').innerHTML =
+                        '<p class="text-danger">Could not load courses.</p>';
+                });
+        }
 
         function renderCourses() {
             const grid = document.getElementById('instructor-courses-grid');
             grid.innerHTML = '';
-            myCourses.forEach(course => {
+
+            if (!myCourses.length) {
+                grid.innerHTML = '<p class="text-muted">No courses created yet.</p>';
+                return;
+            }
+
+            myCourses.forEach((course, index) => {
+                const color = index % 2 === 0 ? 'one' : 'two';
                 grid.innerHTML += `
                     <div class="col-md-6 col-xl-4">
                         <div class="feature-card p-4 h-100 d-flex flex-column">
-                            <div class="feature-icon ${course.color} mb-3" style="width:45px; height:45px; font-size:1.2rem;">📚</div>
-                            <h5 class="fw-bold mb-1">${course.title}</h5>
+                            <div class="feature-icon ${color} mb-3" style="width:45px; height:45px; font-size:1.2rem;">CL</div>
+                            <h5 class="fw-bold mb-1">${course.name}</h5>
                             <p class="text-muted small mb-3">${course.code}</p>
                             <div class="mt-auto">
-                                <p class="small text-muted mb-2">👥 ${course.students} Students Enrolled</p>
+                                <p class="small text-muted mb-2">${course.instructor}</p>
                                 <div class="d-flex gap-2">
                                     <a href="InstructorSyllabus.html?course=${course.code}" class="btn btn-sm btn-outline-primary flex-grow-1">Syllabus</a>
                                     <a href="InstructorMaterials.html?course=${course.code}" class="btn btn-sm btn-outline-primary flex-grow-1">Materials</a>
@@ -105,18 +123,31 @@
 
         document.getElementById('instructorAddCourseForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            myCourses.push({
-                title: document.getElementById('newCourseName').value,
-                code: document.getElementById('newCourseCode').value,
-                students: 0,
-                color: 'three'
+
+            const params = new URLSearchParams();
+            params.append('name', document.getElementById('newCourseName').value);
+            params.append('code', document.getElementById('newCourseCode').value);
+
+            fetch('api/courses', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params.toString()
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Course was not saved.');
+                }
+                bootstrap.Modal.getInstance(document.getElementById('addCourseModal')).hide();
+                this.reset();
+                loadCourses();
+            })
+            .catch(error => {
+                console.error('Course Save Error:', error);
+                alert('Could not create course.');
             });
-            renderCourses();
-            bootstrap.Modal.getInstance(document.getElementById('addCourseModal')).hide();
-            this.reset();
         });
 
-        renderCourses();
+        loadCourses();
     </script>
     <script src="js/current_user.js"></script>
 </body>
