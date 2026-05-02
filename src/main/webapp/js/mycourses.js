@@ -85,7 +85,11 @@ function addCourse(event) {
     })
         .then(response => {
             if (!response.ok) {
-                throw new Error("Could not register course.");
+                return response.json()
+                    .catch(() => ({ message: "Could not register course." }))
+                    .then(error => {
+                        throw new Error(error.message || "Could not register course.");
+                    });
             }
             return response.json();
         })
@@ -102,7 +106,7 @@ function addCourse(event) {
         })
         .catch(error => {
             console.error("Register Course Error:", error);
-            alert("Could not register this course. Please make sure you are logged in as a student and the database setup SQL has been run.");
+            alert(error.message);
         })
         .finally(() => {
             if (submitButton) {
