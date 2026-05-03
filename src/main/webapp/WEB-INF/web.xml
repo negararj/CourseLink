@@ -7,7 +7,7 @@
 
     <servlet>
         <servlet-name>LoginServlet</servlet-name>
-        <servlet-class>courselink.LoginServlet</servlet-class>
+        <servlet-class>courselink.servlet.LoginServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
@@ -16,7 +16,7 @@
 
     <servlet>
         <servlet-name>SignupServlet</servlet-name>
-        <servlet-class>courselink.SignupServlet</servlet-class>
+        <servlet-class>courselink.servlet.SignupServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>SignupServlet</servlet-name>
@@ -25,7 +25,7 @@
 
     <servlet>
         <servlet-name>CurrentUserServlet</servlet-name>
-        <servlet-class>courselink.CurrentUserServlet</servlet-class>
+        <servlet-class>courselink.servlet.CurrentUserServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>CurrentUserServlet</servlet-name>
@@ -34,7 +34,7 @@
 
     <servlet>
         <servlet-name>ProfileServlet</servlet-name>
-        <servlet-class>courselink.ProfileServlet</servlet-class>
+        <servlet-class>courselink.servlet.ProfileServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>ProfileServlet</servlet-name>
@@ -43,7 +43,7 @@
 
     <servlet>
         <servlet-name>LogoutServlet</servlet-name>
-        <servlet-class>courselink.LogoutServlet</servlet-class>
+        <servlet-class>courselink.servlet.LogoutServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>LogoutServlet</servlet-name>
@@ -52,7 +52,7 @@
 
     <servlet>
         <servlet-name>StudentDashboardServlet</servlet-name>
-        <servlet-class>courselink.StudentDashboardServlet</servlet-class>
+        <servlet-class>courselink.servlet.StudentDashboardServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>StudentDashboardServlet</servlet-name>
@@ -61,7 +61,7 @@
 
     <servlet>
         <servlet-name>MyCoursesServlet</servlet-name>
-        <servlet-class>courselink.MyCoursesServlet</servlet-class>
+        <servlet-class>courselink.servlet.MyCoursesServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>MyCoursesServlet</servlet-name>
@@ -70,7 +70,7 @@
 
     <servlet>
         <servlet-name>CourseClassmatesServlet</servlet-name>
-        <servlet-class>courselink.CourseClassmatesServlet</servlet-class>
+        <servlet-class>courselink.servlet.CourseClassmatesServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>CourseClassmatesServlet</servlet-name>
@@ -79,7 +79,7 @@
 
     <servlet>
         <servlet-name>InstructorDashboardServlet</servlet-name>
-        <servlet-class>courselink.InstructorDashboardServlet</servlet-class>
+        <servlet-class>courselink.servlet.InstructorDashboardServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>InstructorDashboardServlet</servlet-name>
@@ -88,7 +88,7 @@
 
     <servlet>
         <servlet-name>AddExamServlet</servlet-name>
-        <servlet-class>courselink.AddExamServlet</servlet-class>
+        <servlet-class>courselink.servlet.AddExamServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>AddExamServlet</servlet-name>
@@ -97,7 +97,7 @@
 
     <servlet>
         <servlet-name>UploadMaterialServlet</servlet-name>
-        <servlet-class>courselink.UploadMaterialServlet</servlet-class>
+        <servlet-class>courselink.servlet.UploadMaterialServlet</servlet-class>
         <multipart-config>
             <max-file-size>10000000</max-file-size>
         </multipart-config>
@@ -113,7 +113,7 @@
 
     <servlet>
         <servlet-name>CourseServlet</servlet-name>
-        <servlet-class>courselink.CourseServlet</servlet-class>
+        <servlet-class>courselink.servlet.CourseServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>CourseServlet</servlet-name>
@@ -122,7 +122,7 @@
 
     <servlet>
         <servlet-name>AssessmentServlet</servlet-name>
-        <servlet-class>courselink.AssessmentServlet</servlet-class>
+        <servlet-class>courselink.servlet.AssessmentServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>AssessmentServlet</servlet-name>
@@ -131,7 +131,7 @@
 
     <servlet>
         <servlet-name>GradeTrackerServlet</servlet-name>
-        <servlet-class>courselink.GradeTrackerServlet</servlet-class>
+        <servlet-class>courselink.servlet.GradeTrackerServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>GradeTrackerServlet</servlet-name>
@@ -140,7 +140,7 @@
 
     <servlet>
         <servlet-name>CalendarServlet</servlet-name>
-        <servlet-class>courselink.CalendarServlet</servlet-class>
+        <servlet-class>courselink.servlet.CalendarServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>CalendarServlet</servlet-name>

@@ -1,4 +1,9 @@
-package courselink;
+package courselink.servlet;
+
+import courselink.DBConnection;
+import courselink.dao.*;
+import courselink.model.*;
+import courselink.util.PasswordUtil;
 
 import com.google.gson.Gson;
 import jakarta.servlet.http.HttpServlet;

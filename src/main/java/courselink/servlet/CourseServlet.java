@@ -1,4 +1,9 @@
-package courselink;
+package courselink.servlet;
+
+import courselink.DBConnection;
+import courselink.dao.*;
+import courselink.model.*;
+import courselink.util.PasswordUtil;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;

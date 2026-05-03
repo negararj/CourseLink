@@ -1,4 +1,9 @@
-package courselink;
+package courselink.servlet;
+
+import courselink.DBConnection;
+import courselink.dao.*;
+import courselink.model.*;
+import courselink.util.PasswordUtil;
 
 import com.google.gson.Gson;
 import jakarta.servlet.ServletException;
@@ -12,8 +17,8 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-@WebServlet("/api/signup")
-public class SignupServlet extends HttpServlet {
+@WebServlet("/api/login")
+public class LoginServlet extends HttpServlet {
     private final UserDAO userDAO = new UserDAO();
     private final Gson gson = new Gson();
 
@@ -23,41 +28,28 @@ public class SignupServlet extends HttpServlet {
 
         request.setCharacterEncoding("UTF-8");
 
-        String firstName = trim(request.getParameter("firstName"));
-        String lastName = trim(request.getParameter("lastName"));
         String email = trim(request.getParameter("email")).toLowerCase();
-        String major = trim(request.getParameter("major"));
-        String role = trim(request.getParameter("role")).toLowerCase();
         String password = request.getParameter("password");
+        String requestedRole = trim(request.getParameter("role")).toLowerCase();
 
-        if (isBlank(firstName) || isBlank(lastName) || isBlank(email) || isBlank(role) || isBlank(password)) {
-            sendJson(response, HttpServletResponse.SC_BAD_REQUEST, false, "Please complete all required fields.", null);
+        if (isBlank(email) || isBlank(password) || isBlank(requestedRole)) {
+            sendJson(response, HttpServletResponse.SC_BAD_REQUEST, false, "Please enter your email, password, and role.", null);
             return;
         }
 
-        if (!"student".equals(role) && !"instructor".equals(role)) {
-            sendJson(response, HttpServletResponse.SC_BAD_REQUEST, false, "Please choose a valid role.", null);
+        User user = userDAO.findByEmail(email);
+        if (user == null || !PasswordUtil.verifyPassword(password, user.getPasswordHash())) {
+            sendJson(response, HttpServletResponse.SC_UNAUTHORIZED, false, "Invalid email or password.", null);
             return;
         }
 
-        if (password.length() < 8) {
-            sendJson(response, HttpServletResponse.SC_BAD_REQUEST, false, "Password must be at least 8 characters.", null);
-            return;
-        }
-
-        if (userDAO.findByEmail(email) != null) {
-            sendJson(response, HttpServletResponse.SC_CONFLICT, false, "An account with this email already exists.", null);
-            return;
-        }
-
-        User user = new User(firstName, lastName, email, major, role, PasswordUtil.hashPassword(password));
-        if (!userDAO.createUser(user)) {
-            sendJson(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, false, "Could not create your account.", null);
+        if (!user.getRole().equals(requestedRole)) {
+            sendJson(response, HttpServletResponse.SC_FORBIDDEN, false, "Please choose the correct role for this account.", null);
             return;
         }
 
         createSession(request, user);
-        sendJson(response, HttpServletResponse.SC_OK, true, "Account created successfully.", dashboardFor(role));
+        sendJson(response, HttpServletResponse.SC_OK, true, "Login successful.", dashboardFor(user.getRole()));
     }
 
     private void createSession(HttpServletRequest request, User user) {

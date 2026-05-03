@@ -1,4 +1,4 @@
-package courselink;
+package courselink.util;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;

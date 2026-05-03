@@ -1,4 +1,4 @@
-package courselink;
+package courselink.model;
 import java.time.LocalDate;
 
 public class Assessment {

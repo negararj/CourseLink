@@ -1,4 +1,4 @@
-package courselink;
+package courselink.model;
 
 public class Course {
     private int id;

@@ -1,4 +1,7 @@
-package courselink;
+package courselink.dao;
+
+import courselink.DBConnection;
+import courselink.model.*;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
